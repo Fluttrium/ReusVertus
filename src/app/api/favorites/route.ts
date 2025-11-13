@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
             name: true,
             code: true,
             price: true,
-            description: true,
             imageUrl: true,
             colors: true,
             sizes: true,
