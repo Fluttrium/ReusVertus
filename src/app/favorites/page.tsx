@@ -16,7 +16,6 @@ interface Favorite {
     code: string;
     price: number;
     imageUrl: string | null;
-    colors: string[] | null;
     sizes: string[] | null;
   };
 }
@@ -134,7 +133,7 @@ export default function FavoritesPage() {
           <>
             {/* Карточки товаров */}
             <div className="mb-12">
-              <h1 className="text-2xl uppercase mb-8">Избранное</h1>
+            
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {favorites.map((favorite) => (
                   <div key={favorite.id} className="relative group">

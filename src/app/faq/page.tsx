@@ -32,8 +32,7 @@ export default function FAQPage() {
       <div className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {/* Hero Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl uppercase mb-4">FAQ</h1>
-          <p className="text-xl opacity-70">Помощь покупателю</p>
+          <h1 className="text-4xl md:text-5xl uppercase">FAQ</h1>
         </div>
 
         {/* FAQ Sections */}

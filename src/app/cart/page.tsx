@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 interface CartItem {
   id: string;
@@ -19,6 +20,25 @@ interface CartItem {
     imageUrl: string | null;
   };
 }
+
+const FALLBACK_PRODUCT_IMAGE = "/2025719194253168.jpg";
+
+const formatProductName = (name: string) =>
+  name
+    .replace(/женская/gi, "")
+    .replace(/футболка/gi, "")
+    .replace(/sheert/gi, "shirt")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getProductImageSrc = (url: string | null) => {
+  if (!url) return FALLBACK_PRODUCT_IMAGE;
+  try {
+    return encodeURI(url);
+  } catch {
+    return url.replace(/ /g, "%20");
+  }
+};
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -224,12 +244,14 @@ export default function CartPage() {
                 key={item.id}
                 className="flex gap-4 border-b border-black/10 pb-6"
               >
-                <div className="w-24 h-24 bg-bg-2 rounded flex items-center justify-center">
+                <div className="relative w-24 h-24 bg-bg-2 rounded overflow-hidden flex items-center justify-center">
                   {item.product.imageUrl ? (
-                    <img
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      className="w-full h-full object-cover rounded"
+                    <Image
+                      src={getProductImageSrc(item.product.imageUrl)}
+                      alt={formatProductName(item.product.name)}
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
                   ) : (
                     <span className="text-xs opacity-30">Фото</span>
@@ -240,39 +262,13 @@ export default function CartPage() {
                     href={`/product/${item.product.id}`}
                     className="hover:opacity-70 transition-opacity"
                   >
-                    <h3 className="uppercase font-medium">{item.product.name}</h3>
-                    <p className="text-sm opacity-70">{item.product.code}</p>
+                    <h3 className="uppercase font-medium">
+                      {formatProductName(item.product.name)}
+                    </h3>
                   </Link>
                   {item.size && (
                     <p className="text-xs opacity-60 mt-1">Размер: {item.size}</p>
                   )}
-                  {item.color && (
-                    <p className="text-xs opacity-60">Цвет: {item.color}</p>
-                  )}
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
-                        className="w-8 h-8 border border-black/20 rounded flex items-center justify-center hover:bg-black/5"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
-                        className="w-8 h-8 border border-black/20 rounded flex items-center justify-center hover:bg-black/5"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <p className="text-lg font-medium">
-                      {item.product.price * item.quantity} ₽
-                    </p>
-                  </div>
                 </div>
                 <button
                   onClick={() => removeItem(item.id)}

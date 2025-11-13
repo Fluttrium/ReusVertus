@@ -5,19 +5,12 @@ import Link from "next/link";
 export default function ContactsPage() {
   return (
     <div className="min-h-screen bg-bg-1">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <HeaderNavigation className="py-6" />
-      </div>
+      <HeaderNavigation className="py-6" />
 
       {/* Contacts Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
 
         {/* Hero Title */}
-        <div className="text-center">
-          <h1 className="text-4xl md:text-5xl uppercase mb-4">Контакты</h1>
-          <p className="text-xl opacity-70">Свяжитесь с нами</p>
-        </div>
-
         {/* Contact Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 

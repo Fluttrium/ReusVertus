@@ -20,21 +20,20 @@ model User {
 }
 
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  code        String      @unique
-  price       Int
-  description String?
-  imageUrl    String?
-  colors      String?
-  sizes       String?
-  fit         String?
-  category    String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  cartItems   CartItem[]
-  favorites   Favorite[]
-  orderItems  OrderItem[]
+  id         String      @id @default(cuid())
+  name       String
+  code       String      @unique
+  price      Int
+  imageUrl   String?
+  colors     String?
+  sizes      String?
+  fit        String?
+  category   String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  cartItems  CartItem[]
+  favorites  Favorite[]
+  orderItems OrderItem[]
 }
 
 model CartItem {

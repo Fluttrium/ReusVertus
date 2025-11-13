@@ -27,13 +27,13 @@ export default function Footer() {
             {/* Основные ссылки */}
             <div className="flex flex-col gap-4 text-sm uppercase">
               <Link href="/about" className="hover:opacity-70 transition-opacity">
-                О бренде
+                ABOUT
               </Link>
               <Link href="/contacts" className="hover:opacity-70 transition-opacity">
-                Контакты
+                CONTACTS
               </Link>
               <Link href="/faq" className="hover:opacity-70 transition-opacity">
-                FAQ (Помощь покупателю)
+                FAQ
               </Link>
             </div>
 
@@ -85,10 +85,10 @@ export default function Footer() {
               <p>ИНН: 123456789012</p>
               <p>ОГРН: 1234567890123</p>
               <p>© 2024 Reus Vertes. Все права защищены.</p>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
     );
   }
 
@@ -100,13 +100,13 @@ export default function Footer() {
           {/* Основные ссылки */}
           <div className="flex gap-6 text-sm uppercase">
             <Link href="/about" className="hover:opacity-70 transition-opacity">
-              О бренде
+              ABOUT
             </Link>
             <Link href="/contacts" className="hover:opacity-70 transition-opacity">
-              Контакты
+              CONTACTS
             </Link>
             <Link href="/faq" className="hover:opacity-70 transition-opacity">
-              FAQ (Помощь покупателю)
+              FAQ
             </Link>
           </div>
 
@@ -132,9 +132,9 @@ export default function Footer() {
               className="hover:opacity-70 transition-opacity"
             >
               VK
-            </Link>
-          </div>
-        </div>
+                </Link>
+              </div>
+            </div>
 
         {/* Поддержка Фонда содействия инновациям */}
         <div className="mt-6 pt-6 border-t border-white/20 space-y-4">
@@ -154,15 +154,8 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* ИНН и информация о компании */}
-        <div className="mt-6 pt-6 border-t border-white/20 text-xs opacity-70 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-1">
-            <p>ИНН: 123456789012</p>
-            <p>ИНН: 123456789012</p>
-          </div>
-          <p>© 2024 Reus Vertes. Все права защищены.</p>
+        
         </div>
-      </div>
-    </footer>
+      </footer>
   );
 }

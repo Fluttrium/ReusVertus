@@ -20,7 +20,7 @@ interface Product {
   name: string;
   code: string;
   price: number;
-  description: string | null;
+  description?: string | null;
   imageUrl: string | null;
   colors: string[] | null;
   sizes: string[] | null;
@@ -33,7 +33,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { user } = useAuth();
   const router = useRouter();
   const [selectedSize, setSelectedSize] = useState<string>("");
-  const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedFit, setSelectedFit] = useState<string>("Regular");
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
@@ -42,11 +41,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
-  const defaultColors = [
-    { name: "Белый", value: "#FFFFFF" },
-    { name: "Зеленый", value: "#006341" },
-  ];
 
   const defaultSizes = ["S", "M", "L", "XL"];
 
@@ -162,16 +156,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const sizes = product?.sizes || defaultSizes;
-  const colors = product?.colors
-    ? product.colors.map((color) => {
-        const colorMap: Record<string, string> = {
-          "#006341": "Зеленый",
-          "#FFFFFF": "Белый",
-        };
-        return { name: colorMap[color] || color, value: color };
-      })
-    : defaultColors;
-
   // Посадка - выбирается пользователем
   const fitScale = [
     { label: "Slim", value: "Slim" },
@@ -193,6 +177,39 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       : FALLBACK_PRODUCT_IMAGES;
     return Array.from(new Set(baseImages.filter(Boolean)));
   }, [product?.imageUrl]);
+
+  const sanitizedName = useMemo(() => {
+    const rawName = product?.name || "Название товара";
+    return rawName
+      .replace(/женская/gi, "")
+      .replace(/футболка/gi, "")
+      .replace(/sheert/gi, "shirt")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, [product?.name]);
+
+  const sanitizedDescription = useMemo(() => {
+    if (!product?.description) {
+      return "";
+    }
+    const cleaned = product.description
+      .replace(/женская/gi, "")
+      .replace(/футболка/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return cleaned.length > 0 ? cleaned : "";
+  }, [product?.description]);
+
+  const limitedDescription = useMemo(() => {
+    if (!sanitizedDescription) return "";
+    return sanitizedDescription.length > 100
+      ? `${sanitizedDescription.slice(0, 100).trim()}…`
+      : sanitizedDescription;
+  }, [sanitizedDescription]);
+
+  const limitText = (text: string) =>
+    text.length > 100 ? `${text.slice(0, 100).trim()}…` : text;
 
   useEffect(() => {
     if (galleryImages.length > 0 && selectedImageIndex >= galleryImages.length) {
@@ -229,7 +246,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           productId: id,
           quantity: 1,
           size: selectedSize,
-          color: selectedColor || null,
           fit: selectedFit || null,
         }),
       });
@@ -344,43 +360,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="space-y-6 pt-2 lg:pt-0">
             {/* Название товара + код товара */}
             <div>
-              <h1 className="text-3xl uppercase mb-2">
-                {product?.name || "Название товара"}
-              </h1>
-              <p className="text-sm opacity-70 uppercase">
-                Код товара: {product?.code || "RV-001"}
-              </p>
+              <h1 className="text-3xl uppercase mb-2">{sanitizedName}</h1>
             </div>
 
             {/* Короткое описание */}
-            <p className="leading-relaxed opacity-80">
-              {product?.description ||
-                "Короткое описание товара. Премиальная футболка из высококачественного хлопка."}
-            </p>
+            {limitedDescription && (
+              <p className="leading-relaxed opacity-80">{limitedDescription}</p>
+            )}
 
             {/* Цена */}
             <div className="text-2xl font-semibold">
               {product?.price ? `${product.price.toLocaleString("ru-RU")} ₽` : "5 990 ₽"}
-            </div>
-
-            {/* Цвета */}
-            <div className="space-y-3">
-              <p className="uppercase text-sm font-medium">Цвета</p>
-              <div className="flex gap-3">
-                {colors.map((color) => (
-                  <button
-                    key={color.value}
-                    onClick={() => setSelectedColor(color.value)}
-                    className={`w-12 h-12 rounded-full border-2 transition-all ${
-                      selectedColor === color.value
-                        ? "border-bg-3 scale-110"
-                        : "border-transparent hover:border-bg-3/50"
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    aria-label={color.name}
-                  />
-                ))}
-              </div>
             </div>
 
             {/* Размер и посадка */}
@@ -432,24 +422,56 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {/* Размер - выбирается пользователем */}
               <div>
                 <p className="uppercase text-sm font-medium mb-3">Размер</p>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`flex-1 py-3 px-4 border-2 rounded uppercase transition-all ${
+                      className={`w-full py-3 border-2 uppercase tracking-[0.2em] text-sm transition-colors ${
                         selectedSize === size
-                          ? "border-bg-3 bg-bg-2"
-                          : "border-black/20 hover:border-black/40"
+                          ? "border-bg-4 bg-bg-4 text-white"
+                          : "border-black/10 bg-white hover:border-bg-4/50"
                       }`}
                     >
                       {size}
                     </button>
                   ))}
                 </div>
-                <button className="mt-2 text-sm underline opacity-70">
-                  Таблица размеров
-                </button>
+
+                {/* Таблица размеров */}
+                <details className="border border-black/10 rounded-lg">
+                  <summary className="px-4 py-3 text-xs uppercase tracking-[0.2em] cursor-pointer select-none flex items-center justify-between">
+                    <span>Таблица размеров</span>
+                    <span className="text-[10px]">Раскрыть</span>
+                  </summary>
+                  <div className="overflow-hidden">
+                    <table className="w-full text-xs uppercase">
+                      <thead className="bg-black/5">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Размер</th>
+                          <th className="px-4 py-3 text-left">Грудь (см)</th>
+                          <th className="px-4 py-3 text-left">Талия (см)</th>
+                          <th className="px-4 py-3 text-left">Бедра (см)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-black/10">
+                        {[
+                          { size: "S", chest: "88-92", waist: "70-74", hips: "90-94" },
+                          { size: "M", chest: "92-96", waist: "74-78", hips: "94-98" },
+                          { size: "L", chest: "96-100", waist: "78-82", hips: "98-102" },
+                          { size: "XL", chest: "100-104", waist: "82-86", hips: "102-106" },
+                        ].map((row) => (
+                          <tr key={row.size} className="odd:bg-white even:bg-black/5">
+                            <td className="px-4 py-3 font-semibold">{row.size}</td>
+                            <td className="px-4 py-3">{row.chest}</td>
+                            <td className="px-4 py-3">{row.waist}</td>
+                            <td className="px-4 py-3">{row.hips}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
               </div>
             </div>
 
@@ -501,6 +523,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
+        <div className="my-16" aria-hidden="true">
+          <div className="h-1 bg-bg-4" />
+          <div className="mt-2 h-1 bg-bg-4" />
+        </div>
+
         {/* Инфо о товаре */}
         <div className="mb-16 space-y-10">
           <div>
@@ -515,9 +542,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </section>
 
             <section>
+              <p className="uppercase text-sm font-medium mb-3">100 LIMIT</p>
+            </section>
+
+            <section>
               <h3 className="uppercase text-sm font-medium mb-3">Состав</h3>
               <p className="leading-relaxed opacity-80">
-                100% хлопок, кулирка с peach-эффектом, 250&nbsp;г/м²
+                {limitText("100% хлопок, кулирка с peach-эффектом, 250 г/м²")}
               </p>
             </section>
 
@@ -529,35 +560,33 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <section>
               <h3 className="uppercase text-sm font-medium mb-3">Подробности, материалы и инструкция по уходу</h3>
               <p className="leading-relaxed opacity-80">
-                Изделие изготавливается из высококачественного хлопка с мягкой поверхностью. Рекомендуется деликатный уход, чтобы сохранить структуру ткани и насыщенность цвета.
+                {limitText(
+                  "Изделие изготавливается из высококачественного хлопка с мягкой поверхностью. Рекомендуется деликатный уход, чтобы сохранить структуру ткани и насыщенность цвета."
+                )}
               </p>
             </section>
 
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="uppercase text-sm font-medium mb-1">Артикул</h3>
-                <p className="opacity-80 uppercase">{product?.code || "RV-001"}</p>
-              </div>
-              <div>
                 <h3 className="uppercase text-sm font-medium mb-1">Коллекция</h3>
-                <p className="opacity-80 uppercase">Осень-Зима 2024</p>
+                <p className="opacity-80 uppercase">{limitText("Осень-Зима 2025")}</p>
               </div>
             </section>
 
             <section>
               <h3 className="uppercase text-sm font-medium mb-3">Уход</h3>
               <ul className="space-y-2 opacity-80">
-                <li>• Машинная стирка при 30°C</li>
-                <li>• Не отбеливать</li>
-                <li>• Гладить при низкой температуре</li>
-                <li>• Не подвергать химчистке</li>
+                <li>{limitText("• Машинная стирка при 30°C")}</li>
+                <li>{limitText("• Не отбеливать")}</li>
+                <li>{limitText("• Гладить при низкой температуре")}</li>
+                <li>{limitText("• Не подвергать химчистке")}</li>
               </ul>
             </section>
 
             <section>
               <h3 className="uppercase text-sm font-medium mb-3">Доставка</h3>
               <p className="leading-relaxed opacity-80">
-                Доставка по Москве и регионам России. Срок доставки: 1–3 рабочих дня.
+                {limitText("Доставка по Москве и регионам России. Срок доставки: 1–3 рабочих дня.")}
               </p>
             </section>
 
@@ -572,26 +601,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
       </div>
-
-        {/* Lookbook */}
-        <div className="mb-16">
-          <h2 className="text-2xl uppercase mb-8">Lookbook</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {lookbookImages.map((image, index) => (
-              <div key={image.src} className="group relative w-full aspect-[3/4] overflow-hidden rounded-lg">
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  priority={index === 0}
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" aria-hidden="true" />
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Скидка за подписку на имейл */}
         <EmailSubscription />
