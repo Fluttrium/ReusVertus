@@ -68,3 +68,8 @@ a {
   font-weight: 400;
   font-family: var(--font-ibm-plex-mono), monospace;
 }
+
+.button-link {
+  font-size: 18px;
+  font-weight: 800;
+}

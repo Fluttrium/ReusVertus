@@ -36,15 +36,20 @@ export default function LooksPage() {
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 priority={index < 2}
-                className="object-cover transition-transform duration-500 group-hover:scale-95 group-hover:-rotate-2"
+                className="object-cover transition-transform duration-500"
               />
               <Image
                 src={buildImageSrc(look.hoverFile ?? look.file)}
                 alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="object-cover absolute inset-0 opacity-0 translate-x-6 translate-y-6 rotate-6 scale-105 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-5 group-hover:-translate-y-3 group-hover:rotate-3"
+                className="object-cover absolute inset-0 opacity-0 scale-105 transition-transform duration-500 group-hover:opacity-100 group-hover:scale-110"
               />
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <span className="text-white uppercase tracking-[0.2em] text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  {look.title}
+                </span>
+              </div>
             </div>
           ))}
         </div>

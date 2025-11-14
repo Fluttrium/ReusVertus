@@ -65,12 +65,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-bg-1 flex flex-col">
       <HeaderNavigation className="py-6" />
+      <div className="h-2 bg-black/10 sm:hidden" aria-hidden="true" />
 
       <div className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
         {/* Плашка авторизации */}
         {!user ? (
           <div className="bg-bg-2 rounded-lg p-8 mb-12">
-            <h2 className="text-2xl uppercase mb-4 text-center">Профиль</h2>
+            <h2 className="text-2xl uppercase mb-2 text-center">Профиль</h2>
+            <div className="h-[2px] bg-black/15 w-full mb-6" aria-hidden="true" />
             <div className="flex gap-4 justify-center mb-6">
               <button
                 onClick={() => {

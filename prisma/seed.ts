@@ -9,7 +9,7 @@ async function main() {
       name: 'VRT SHIRT 001',
       code: 'RV-W-002',
       price: 6800,
-      category: 'Женское',
+      category: 'Унисекс',
       fit: 'Обычная',
       sizes: JSON.stringify(['S', 'M', 'L', 'XL']),
       colors: JSON.stringify(['#006341', '#FFFFFF']),

@@ -28,39 +28,39 @@ export default function Footer() {
             <div className="flex flex-col gap-4 text-sm uppercase">
               <Link href="/about" className="hover:opacity-70 transition-opacity">
                 ABOUT
-              </Link>
+                </Link>
               <Link href="/contacts" className="hover:opacity-70 transition-opacity">
                 CONTACTS
-              </Link>
-              <Link href="/faq" className="hover:opacity-70 transition-opacity">
-                FAQ
-              </Link>
-            </div>
+                  </Link>
+                  <Link href="/faq" className="hover:opacity-70 transition-opacity">
+                    FAQ
+                  </Link>
+              </div>
 
             {/* Соцсети */}
             <div className="flex gap-4 text-sm uppercase pt-4 border-t border-white/20">
-              <Link
+                <Link
                 href="https://instagram.com/reusvertes"
                 target="_blank"
                 className="hover:opacity-70 transition-opacity"
               >
                 Instagram
-              </Link>
+                </Link>
               <Link
                 href="https://t.me/reusvertes"
                 target="_blank"
                 className="hover:opacity-70 transition-opacity"
               >
                 Telegram
-              </Link>
+                </Link>
               <Link
                 href="https://vk.com/reusvertes"
                 target="_blank"
                 className="hover:opacity-70 transition-opacity"
               >
                 VK
-              </Link>
-            </div>
+                </Link>
+              </div>
 
             {/* Поддержка Фонда содействия инновациям */}
             <div className="pt-4 border-t border-white/20 space-y-4">
@@ -78,12 +78,12 @@ export default function Footer() {
                 мероприятия «Платформа университетского технологического предпринимательства» 
                 федерального проекта «Технологии».
               </p>
-            </div>
+              </div>
 
             {/* Информация о компании */}
             <div className="pt-4 border-t border-white/20 text-xs opacity-70">
               <p>© 2024 Reus Vertes. Все права защищены.</p>
-            </div>
+              </div>
             </div>
           </div>
         </footer>
@@ -99,13 +99,13 @@ export default function Footer() {
           <div className="flex gap-6 text-sm uppercase">
             <Link href="/about" className="hover:opacity-70 transition-opacity">
               ABOUT
-            </Link>
+              </Link>
             <Link href="/contacts" className="hover:opacity-70 transition-opacity">
               CONTACTS
-            </Link>
-            <Link href="/faq" className="hover:opacity-70 transition-opacity">
-              FAQ
-            </Link>
+                </Link>
+                <Link href="/faq" className="hover:opacity-70 transition-opacity">
+                  FAQ
+                </Link>
           </div>
 
           {/* Соцсети */}

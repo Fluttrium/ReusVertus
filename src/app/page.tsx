@@ -30,7 +30,7 @@ export default function Home() {
           </h1>
           <Link
             href={`/product/${featuredProductId}`}
-            className="px-14 py-6 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.8rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-6 md:translate-y-0"
+            className="button-link px-14 py-6 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.8rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-6 md:translate-y-0"
           >
             Shop now
           </Link>
