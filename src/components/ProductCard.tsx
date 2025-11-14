@@ -17,9 +17,11 @@ export default function ProductCard({ id, name, code, price, image }: ProductCar
           {image ? (
             <img src={image} alt={name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-bg-3 opacity-30 uppercase text-xs text-center px-4">
-              Фото товара
-            </span>
+            <img
+              src="/shirt/shirt1.png"
+              alt="Дефолтное изображение товара"
+              className="w-full h-full object-cover opacity-80"
+            />
           )}
         </div>
 
@@ -32,11 +34,7 @@ export default function ProductCard({ id, name, code, price, image }: ProductCar
         {/* Цена */}
         <div className="text-base font-medium">{price.toLocaleString("ru-RU")} ₽</div>
 
-        {/* Цвета (заглушка) */}
-        <div className="flex gap-2">
-          <div className="w-4 h-4 rounded-full bg-white border border-black/20"></div>
-          <div className="w-4 h-4 rounded-full bg-bg-4 border border-black/20"></div>
-        </div>
+        {/* Цвета отключены */}
       </div>
     </Link>
   );

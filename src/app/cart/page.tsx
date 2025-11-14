@@ -21,7 +21,7 @@ interface CartItem {
   };
 }
 
-const FALLBACK_PRODUCT_IMAGE = "/2025719194253168.jpg";
+const FALLBACK_PRODUCT_IMAGE = "/shirt/shirt1.png";
 
 const formatProductName = (name: string) =>
   name
@@ -254,7 +254,13 @@ export default function CartPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <span className="text-xs opacity-30">Фото</span>
+                    <Image
+                      src={FALLBACK_PRODUCT_IMAGE}
+                      alt="Изображение товара"
+                      fill
+                      sizes="96px"
+                      className="object-cover opacity-80"
+                    />
                   )}
                 </div>
                 <div className="flex-1">
