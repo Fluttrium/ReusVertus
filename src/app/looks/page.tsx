@@ -2,6 +2,7 @@ import HeaderNavigation from "@/components/HeaderNavigation";
 import Footer from "@/components/Footer";
 import EmailSubscription from "@/components/EmailSubscription";
 import Image from "next/image";
+import type { Metadata } from "next";
 
 const looks = [
   { id: 1, title: "Look 1", file: "202571920230512.jpg", hoverFile: "2025719202722568.jpg" },
@@ -62,4 +63,9 @@ export default function LooksPage() {
     </div>
   );
 }
+
+export const metadata: Metadata = {
+  title: "Lookbook — RUES VERTES",
+  description: "Образы из лимитированных коллекций RUES VERTES.",
+};
 

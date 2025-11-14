@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import { EmailSubscriptionBeige } from "@/components/EmailSubscription";
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 
 const featuredProductId = "RV-W-001";
 
@@ -118,3 +119,9 @@ export default function Home() {
     </div>
   );
 }
+
+export const metadata: Metadata = {
+  title: "RUES VERTES — интернет-магазин лимитированных коллекций",
+  description:
+    "RUES VERTES — streetwear brand из Москвы: лимитированные дропы, базовые вещи, подписка со скидкой 10% на первый заказ.",
+};

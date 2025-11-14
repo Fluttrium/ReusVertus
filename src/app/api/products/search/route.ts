@@ -127,11 +127,11 @@ export async function GET(request: NextRequest) {
     const scoredProducts = allProducts
       .map((product) => ({
         product: {
-          id: product.id,
-          name: product.name,
-          code: product.code,
-          price: product.price,
-          category: product.category,
+      id: product.id,
+      name: product.name,
+      code: product.code,
+      price: product.price,
+      category: product.category,
         },
         score: computeScore(product, variants),
       }))

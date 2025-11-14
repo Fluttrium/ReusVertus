@@ -119,7 +119,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
       setSearchResults([]);
     } finally {
       if (searchAbortController.current === controller) {
-        setIsSearching(false);
+      setIsSearching(false);
       }
     }
   };
@@ -405,15 +405,15 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                   handleSearchClick(e);
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center gap-4 text-[#FFF8F0]/90 hover:text-white transition-colors text-base"
+                className="flex items-center gap-4 text-[#FFF8F0]/90 hover:text-white transition-colors text-sm"
                 aria-label="Поиск"
               >
                 <div className="w-6 h-6">
                   <SearchIcon />
                 </div>
-                <span className="uppercase tracking-[0.12em] text-base">Поиск</span>
+                <span className="uppercase tracking-[0.12em] text-sm">Поиск</span>
               </button>
-              <div className="flex flex-col items-start gap-4 text-[#FFF8F0]/80 text-base">
+              <div className="flex flex-col items-start gap-4 text-[#FFF8F0]/80 text-sm">
                 <Link
                   href="/favorites"
                   onClick={() => setIsMobileMenuOpen(false)}
