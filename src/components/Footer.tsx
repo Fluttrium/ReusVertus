@@ -80,12 +80,10 @@ export default function Footer() {
               </p>
             </div>
 
-            {/* ИНН и информация о компании */}
-            <div className="pt-4 border-t border-white/20 text-xs opacity-70 space-y-1">
-              <p>ИНН: 123456789012</p>
-              <p>ОГРН: 1234567890123</p>
+            {/* Информация о компании */}
+            <div className="pt-4 border-t border-white/20 text-xs opacity-70">
               <p>© 2024 Reus Vertes. Все права защищены.</p>
-              </div>
+            </div>
             </div>
           </div>
         </footer>

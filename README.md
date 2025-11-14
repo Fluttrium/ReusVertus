@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Этот проект на [Next.js](https://nextjs.org) создан с помощью [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Как начать
 
-First, run the development server:
+Сначала запустите сервер разработки:
 
 ```bash
 npm run dev
-# or
+# или
 yarn dev
-# or
+# или
 pnpm dev
-# or
+# или
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте [http://localhost:3000](http://localhost:3000) в браузере, чтобы увидеть результат.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Изменения можно вносить, редактируя файл `app/page.tsx` — страница будет обновляться автоматически.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Проект использует [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) для автоматической оптимизации и загрузки шрифта [Geist](https://vercel.com/font).
 
-## Learn More
+## Почтовые уведомления о заказах
 
-To learn more about Next.js, take a look at the following resources:
+Для отправки уведомлений о новых заказах используется Nodemailer. Чтобы подключить Gmail через пароль приложения, выполните следующие шаги:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Включите двухфакторную аутентификацию для почты `fluttrium@gmail.com` (или другой используемой учётной записи Google).
+2. В Google Account перейдите в «Безопасность» → «Пароли приложений» и сгенерируйте пароль приложения.
+3. Добавьте переменные окружения (локально в `.env.local`, на Vercel — в Project → Settings → Environment Variables):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+SMTP_USER=fluttrium@gmail.com
+SMTP_PASS=пароль-приложения-google
+ORDER_NOTIFICATION_EMAIL=fluttrium@gmail.com
+```
 
-## Deploy on Vercel
+`SMTP_PASS` — это пароль приложения из шага 2. Если нужно отправлять с другого адреса или на другой адрес, измените значения `SMTP_USER` и `ORDER_NOTIFICATION_EMAIL`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Дополнительные настройки:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `SMTP_FROM` — явное значение заголовка From (по умолчанию используется `SMTP_USER`)
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` — кастомные параметры SMTP, если вы используете не Gmail

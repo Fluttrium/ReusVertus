@@ -156,13 +156,13 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
 
   // Иконки
   const SearchIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M22.5 22.5L15.5 15.5M18 9C18 13.4183 14.4183 17 10 17C5.58172 17 2 13.4183 2 9C2 4.58172 5.58172 1 10 1C14.4183 1 18 4.58172 18 9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
 
   const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M21 4C20.4696 3.46957 19.8071 3.07291 19.0711 2.84265C18.3351 2.6124 17.553 2.55641 16.7958 2.67915C16.0386 2.80189 15.331 3.0996 14.732 3.54597C14.133 3.99235 13.6614 4.57343 13.357 5.238L12 8L10.643 5.238C10.3386 4.57343 9.86704 3.99235 9.26805 3.54597C8.66906 3.0996 7.96145 2.80189 7.20424 2.67915C6.44704 2.55641 5.66494 2.6124 4.92893 2.84265C4.19292 3.07291 3.53037 3.46957 3 4C2.29992 4.70008 1.77996 5.56031 1.48559 6.51201C1.19121 7.46371 1.13149 8.4791 1.31253 9.46438C1.49357 10.4497 1.90991 11.3746 2.52371 12.1544C3.1375 12.9343 3.9288 13.5456 4.826 13.93L12 20L19.174 13.93C20.0712 13.5456 20.8625 12.9343 21.4763 12.1544C22.0901 11.3746 22.5064 10.4497 22.6875 9.46438C22.8685 8.4791 22.8088 7.46371 22.5144 6.51201C22.22 5.56031 21.7001 4.70008 21 4Z"
         stroke="currentColor"
@@ -175,7 +175,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
   );
 
   const ProfileIcon = ({ filled = false }: { filled?: boolean }) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
         stroke="currentColor"
@@ -196,7 +196,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
   );
 
   const CartIcon = ({ filled = false }: { filled?: boolean }) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M2 2H5.12727L7.75868 15H19.4182L22.1818 6H6.65455M9.35455 21C10.207 21 10.9 20.307 10.9 19.4545C10.9 18.602 10.207 17.9091 9.35455 17.9091C8.50205 17.9091 7.80909 18.602 7.80909 19.4545C7.80909 20.307 8.50205 21 9.35455 21ZM18.6455 21C19.498 21 20.1909 20.307 20.1909 19.4545C20.1909 18.602 19.498 17.9091 18.6455 17.9091C17.793 17.9091 17.1 18.602 17.1 19.4545C17.1 20.307 17.793 21 18.6455 21Z"
         stroke="currentColor"
@@ -278,7 +278,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
       >
         <div className="max-w-6xl mx-auto px-6 flex flex-col gap-4">
         <div className="flex items-center justify-between w-full">
-            <div className="w-24 flex items-center">
+            <Link href="/" className="w-24 flex items-center" aria-label="На главную">
               <Image
                 src="/RUES%20VERTES.png"
                 alt="Rues Vertes"
@@ -287,62 +287,28 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 priority
                 className="h-auto w-full max-w-[96px]"
               />
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSearchClick}
-                className="flex items-center justify-center p-2 hover:opacity-80 transition-opacity"
-                aria-label="Поиск"
-              >
-                <SearchIcon />
-                <span className="sr-only">Поиск</span>
-              </button>
-              <Link
-                href="/favorites"
-                className="flex items-center justify-center p-2 transition-opacity duration-200 hover:opacity-80"
-                aria-label="Избранное (понравившиеся товары)"
-              >
-                <HeartIcon filled={pathname === "/favorites"} />
-                <span className="sr-only">Избранное</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex items-center justify-center p-2 transition-opacity duration-200 hover:opacity-80"
-                aria-label="Аккаунт (профиль)"
-              >
-                <ProfileIcon filled={pathname?.startsWith("/profile")} />
-                <span className="sr-only">Аккаунт</span>
-              </Link>
-              <Link
-                href="/cart"
-                className="flex items-center justify-center p-2 transition-opacity duration-200 hover:opacity-80"
-                aria-label="Корзина"
-              >
-                <CartIcon filled={pathname === "/cart"} />
-                <span className="sr-only">Корзина</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-                className="flex flex-col justify-between h-[12px] w-8 focus:outline-none"
-                aria-label="Открыть меню"
-                aria-expanded={isMobileMenuOpen}
-              >
-                <span
-                  className={`block h-[3px] w-full bg-[#FFF8F0] transition-transform duration-200 ${
-                    isMobileMenuOpen ? "translate-y-[4px] rotate-45" : ""
-                  }`}
-                />
-                <span
-                  className={`block h-[3px] w-full bg-[#FFF8F0] transition-transform duration-200 ${
-                    isMobileMenuOpen ? "-translate-y-[4px] -rotate-45" : ""
-                  }`}
-                />
-              </button>
-            </div>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="flex flex-col justify-between h-[12px] w-8 focus:outline-none"
+              aria-label="Открыть меню"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span
+                className={`block h-[3px] w-full bg-[#FFF8F0] transition-transform duration-200 ${
+                  isMobileMenuOpen ? "translate-y-[4px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`block h-[3px] w-full bg-[#FFF8F0] transition-transform duration-200 ${
+                  isMobileMenuOpen ? "-translate-y-[4px] -rotate-45" : ""
+                }`}
+              />
+            </button>
           </div>
           <nav
-            className={`absolute left-0 top-full z-40 w-full bg-bg-4 flex flex-col gap-4 text-sm tracking-[0.15ем] px-6 py-4 transition-all duration-300 ${
+            className={`absolute left-0 top-full z-40 h-[calc(100vh-4.5rem)] w-full bg-bg-4/95 backdrop-blur-sm flex flex-col gap-6 text-base tracking-[0.1em] px-6 py-8 pr-16 transition-all duration-300 ${
               isMobileMenuOpen
                 ? "translate-x-0 opacity-100 pointer-events-auto"
                 : "-translate-x-full opacity-0 pointer-events-none"
@@ -351,8 +317,10 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
             <Link
               href="/product/RV-W-002"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-2 uppercase text-base transition-opacity hover:opacity-80 ${
-                isActiveLink("/product/RV-W-002") ? "font-bold" : ""
+              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/product/RV-W-002")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               Shop now
@@ -360,8 +328,10 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
             <Link
               href="/looks"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-2 uppercase text-base transition-opacity hover:opacity-80 ${
-                isActiveLink("/looks") ? "font-bold" : ""
+              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/looks")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               Lookbook
@@ -369,12 +339,64 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
             <Link
               href="/about"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-2 uppercase text-base transition-opacity hover:opacity-80 ${
-                isActiveLink("/about") ? "font-bold" : ""
+              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/about")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               About
             </Link>
+            <div className="pt-5 mt-4 border-t border-[#FFF8F0]/20 flex flex-col gap-4">
+              <button
+                onClick={(e) => {
+                  handleSearchClick(e);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-4 text-[#FFF8F0]/90 hover:text-white transition-colors text-base"
+                aria-label="Поиск"
+              >
+                <div className="w-6 h-6">
+                  <SearchIcon />
+                </div>
+                <span className="uppercase tracking-[0.12em] text-base">Поиск</span>
+              </button>
+              <div className="flex flex-col items-start gap-4 text-[#FFF8F0]/80 text-base">
+                <Link
+                  href="/favorites"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  aria-label="Избранное (понравившиеся товары)"
+                >
+                  <div className="w-6 h-6">
+                    <HeartIcon filled={pathname === "/favorites"} />
+                  </div>
+                  <span className="uppercase text-sm tracking-[0.12em]">Избранное</span>
+                </Link>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  aria-label="Аккаунт (профиль)"
+                >
+                  <div className="w-6 h-6">
+                    <ProfileIcon filled={pathname?.startsWith("/profile")} />
+                  </div>
+                  <span className="uppercase text-sm tracking-[0.12em]">Профиль</span>
+                </Link>
+                <Link
+                  href="/cart"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  aria-label="Корзина"
+                >
+                  <div className="w-6 h-6">
+                    <CartIcon filled={pathname === "/cart"} />
+                  </div>
+                  <span className="uppercase text-sm tracking-[0.12em]">Корзина</span>
+                </Link>
+              </div>
+            </div>
           </nav>
         </div>
         <SearchDropdown />
@@ -387,27 +409,33 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
     return (
       <header className={`bg-bg-4 text-[#FFF8F0] py-5 relative sticky top-0 z-50 ${className}`}>
         <div className="w-full px-10 flex items-center gap-8">
-          <nav className="flex flex-1 items-center justify-start gap-8 uppercase tracking-[0.12em] text-lg">
+          <nav className="flex flex-1 items-center justify-start gap-8 uppercase tracking-[0.04em] text-lg">
             <Link
               href="/product/RV-W-002"
-              className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/product/RV-W-002") ? "font-bold" : ""
+              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/product/RV-W-002")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               Shop now
             </Link>
             <Link
               href="/looks"
-              className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/looks") ? "font-bold" : ""
+              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/looks")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               Lookbook
             </Link>
             <Link
               href="/about"
-              className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/about") ? "font-bold" : ""
+              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+                isActiveLink("/about")
+                  ? "font-black text-white"
+                  : "font-light text-[#FFF8F0]/60"
               }`}
             >
               About
@@ -460,27 +488,33 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
   return (
     <header className={`bg-bg-4 text-[#FFF8F0] py-5 relative sticky top-0 z-50 ${className}`}>
       <div className="w-full px-14 flex items-center gap-10">
-        <nav className="flex flex-1 items-center justify-start gap-10 uppercase tracking-[0.12em] text-lg">
+        <nav className="flex flex-1 items-center justify-start gap-10 uppercase tracking-[0.04em] text-lg">
           <Link
             href="/product/RV-W-002"
-            className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/product/RV-W-002") ? "font-bold" : ""
+            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+              isActiveLink("/product/RV-W-002")
+                ? "font-black text-white"
+                : "font-light text-[#FFF8F0]/60"
             }`}
           >
             Shop now
           </Link>
           <Link
             href="/looks"
-            className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/looks") ? "font-bold" : ""
+            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+              isActiveLink("/looks")
+                ? "font-black text-white"
+                : "font-light text-[#FFF8F0]/60"
             }`}
           >
             Lookbook
           </Link>
           <Link
             href="/about"
-            className={`tracking-[0.12em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/about") ? "font-bold" : ""
+            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
+              isActiveLink("/about")
+                ? "font-black text-white"
+                : "font-light text-[#FFF8F0]/60"
             }`}
           >
             About

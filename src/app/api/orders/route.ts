@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendOrderNotification } from '@/lib/mailer';
+
+const sanitizeProductName = (name: string) =>
+  name
+    .replace(/женская/gi, "")
+    .replace(/футболка/gi, "")
+    .replace(/sheert/gi, "shirt")
+    .replace(/\s+/g, " ")
+    .trim();
 
 // Создать заказ
 export async function POST(request: NextRequest) {
@@ -59,6 +68,21 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    await sendOrderNotification({
+      id: order.id,
+      total: order.total,
+      email: order.email,
+      phone: order.phone,
+      address: order.address,
+      items: order.orderItems.map((item) => ({
+        name: sanitizeProductName(item.product?.name ?? ""),
+        code: item.product?.code ?? null,
+        quantity: item.quantity,
+        price: item.price,
+        size: item.size,
+      })),
     });
 
     // Очистить корзину
