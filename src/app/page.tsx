@@ -22,16 +22,16 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col items-center justify-center gap-4 sm:gap-6 md:gap-8 px-4 text-center translate-y-20 md:translate-y-16">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-2 sm:gap-4 md:gap-8 px-4 text-center translate-y-16 md:translate-y-10">
           <h1
-            className="text-white text-3xl md:text-5xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.3]"
+            className="text-white text-3xl md:text-5xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.3] whitespace-nowrap"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 700 }}
           >
             VRT SHIRT 001
           </h1>
           <Link
             href={`/product/${featuredProductId}`}
-            className="button-link px-14 py-6 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.8rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-6 md:translate-y-0"
+            className="button-link px-10 py-5 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.4rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-3 md:translate-y-0 whitespace-nowrap"
           >
             Shop now
           </Link>
