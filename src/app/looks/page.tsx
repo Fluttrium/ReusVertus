@@ -1,7 +1,7 @@
 import HeaderNavigation from "@/components/HeaderNavigation";
 import Footer from "@/components/Footer";
 import EmailSubscription from "@/components/EmailSubscription";
-import Image from "next/image";
+import LookbookGrid from "@/components/LookbookGrid";
 import type { Metadata } from "next";
 
 const looks = [
@@ -18,8 +18,6 @@ const looks = [
   { id: 11, title: "Look 11", file: "dclassic 2025-08-25 154007.751.JPG", hoverFile: "202571920230512.jpg" },
 ];
 
-const buildImageSrc = (filename: string) => `/lookbook/${encodeURIComponent(filename)}`;
-
 export default function LooksPage() {
   return (
     <div className="min-h-screen bg-bg-1">
@@ -28,32 +26,7 @@ export default function LooksPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
         
 
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-          {looks.map((look, index) => (
-            <div key={look.id} className="relative aspect-[3/4] overflow-hidden rounded-lg bg-bg-2 group">
-              <Image
-                src={buildImageSrc(look.file)}
-                alt=""
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                priority={index < 2}
-                className="object-cover transition-transform duration-500"
-              />
-              <Image
-                src={buildImageSrc(look.hoverFile ?? look.file)}
-                alt=""
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="object-cover absolute inset-0 opacity-0 scale-105 transition-transform duration-500 group-hover:opacity-100 group-hover:scale-110"
-              />
-              <div className="absolute inset-x-0 bottom-0 p-4">
-                <span className="text-white uppercase tracking-[0.2em] text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  {look.title}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <LookbookGrid looks={looks} />
 
         {/* Блок подписки на имейл */}
         <EmailSubscription />

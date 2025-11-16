@@ -238,6 +238,9 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
 
   const menuBar = <div className="bg-[#FFF8F0] h-[3.628px] w-full" />;
 
+  const getNavLinkClasses = (href: string, baseClasses: string) =>
+    `${baseClasses} ${isActiveLink(href) ? "font-bold text-[1.2rem]" : "font-normal text-[1.125rem]"}`;
+
   // Компонент поиска
   const dropdownPositionClass = isMobile
     ? "fixed inset-0 top-0 left-0 right-0 bottom-0 h-screen"
@@ -369,33 +372,30 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
             <Link
               href="/product/RV-W-001"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/product/RV-W-001")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/product/RV-W-001",
+                "flex items-center justify-start px-2 py-3 uppercase tracking-[0.1em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               Shop now
             </Link>
             <Link
               href="/looks"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/looks")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/looks",
+                "flex items-center justify-start px-2 py-3 uppercase tracking-[0.1em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               Lookbook
             </Link>
             <Link
               href="/about"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex items-center justify-start px-2 py-3 uppercase text-lg tracking-[0.1em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/about")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/about",
+                "flex items-center justify-start px-2 py-3 uppercase tracking-[0.1em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               About
             </Link>
@@ -405,7 +405,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                   handleSearchClick(e);
                   setIsMobileMenuOpen(false);
                 }}
-                className="flex items-center gap-4 text-[#FFF8F0]/90 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-4 text-[#FFF8F0] hover:opacity-80 transition-colors text-sm"
                 aria-label="Поиск"
               >
                 <div className="w-6 h-6">
@@ -413,11 +413,11 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 </div>
                 <span className="uppercase tracking-[0.12em] text-sm">Поиск</span>
               </button>
-              <div className="flex flex-col items-start gap-4 text-[#FFF8F0]/80 text-sm">
+              <div className="flex flex-col items-start gap-4 text-[#FFF8F0] text-sm">
                 <Link
                   href="/favorites"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  className="flex items-center gap-4 hover:opacity-80 transition-colors"
                   aria-label="Избранное (понравившиеся товары)"
                 >
                   <div className="w-6 h-6">
@@ -428,7 +428,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 <Link
                   href="/profile"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  className="flex items-center gap-4 hover:opacity-80 transition-colors"
                   aria-label="Аккаунт (профиль)"
                 >
                   <div className="w-6 h-6">
@@ -439,7 +439,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 <Link
                   href="/cart"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-4 hover:text-white transition-colors"
+                  className="flex items-center gap-4 hover:opacity-80 transition-colors"
                   aria-label="Корзина"
                 >
                   <div className="w-6 h-6">
@@ -464,31 +464,28 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
           <nav className="flex flex-1 items-center justify-start gap-8 uppercase tracking-[0.04em] text-lg">
             <Link
               href="/product/RV-W-001"
-              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/product/RV-W-001")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/product/RV-W-001",
+                "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               Shop now
             </Link>
             <Link
               href="/looks"
-              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/looks")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/looks",
+                "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               Lookbook
             </Link>
             <Link
               href="/about"
-              className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-                isActiveLink("/about")
-                  ? "font-black text-white"
-                  : "font-light text-[#FFF8F0]/60"
-              }`}
+              className={getNavLinkClasses(
+                "/about",
+                "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+              )}
             >
               About
             </Link>
@@ -543,31 +540,28 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
         <nav className="flex flex-1 items-center justify-start gap-10 uppercase tracking-[0.04em] text-lg">
           <Link
             href="/product/RV-W-001"
-            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/product/RV-W-001")
-                ? "font-black text-white"
-                : "font-light text-[#FFF8F0]/60"
-            }`}
+            className={getNavLinkClasses(
+              "/product/RV-W-001",
+              "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+            )}
           >
             Shop now
           </Link>
           <Link
             href="/looks"
-            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/looks")
-                ? "font-black text-white"
-                : "font-light text-[#FFF8F0]/60"
-            }`}
+            className={getNavLinkClasses(
+              "/looks",
+              "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+            )}
           >
             Lookbook
           </Link>
           <Link
             href="/about"
-            className={`tracking-[0.04em] transition-opacity hover:opacity-80 ${
-              isActiveLink("/about")
-                ? "font-black text-white"
-                : "font-light text-[#FFF8F0]/60"
-            }`}
+            className={getNavLinkClasses(
+              "/about",
+              "tracking-[0.04em] transition-opacity hover:opacity-80 text-[#FFF8F0]"
+            )}
           >
             About
           </Link>

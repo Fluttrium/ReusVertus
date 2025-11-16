@@ -63,7 +63,9 @@ function EmailSubscriptionBase({ variant = "green" }: EmailSubscriptionProps) {
             className={`text-xl md:text-xl lg:text-2xl uppercase font-medium leading-snug md:leading-tight ${headingColor}`}
             style={{ fontFamily: "var(--font-ibm-plex-mono)", fontWeight: 500 }}
           >
-            Скидка 10% за подписку на EMAIL-РАССЫЛКУ
+            Скидка 10% за подписку
+            <br className="block sm:hidden" />
+            на EMAIL-РАССЫЛКУ
           </p>
           <p
             className={`text-xs md:text-sm opacity-90 ${textColor}`}

@@ -36,6 +36,24 @@ const CYRILLIC_TO_LATIN: Record<string, string> = {
   я: "ya",
 };
 
+const BASE_SHIRT_SYNONYMS = ["shirt", "tshirt", "t-shirt", "tee", "vrt shirt"];
+
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  футболка: BASE_SHIRT_SYNONYMS,
+  футболку: BASE_SHIRT_SYNONYMS,
+  футболки: BASE_SHIRT_SYNONYMS,
+  футболке: BASE_SHIRT_SYNONYMS,
+  футболок: BASE_SHIRT_SYNONYMS,
+  futbolka: BASE_SHIRT_SYNONYMS,
+  futbolku: BASE_SHIRT_SYNONYMS,
+  futbolki: BASE_SHIRT_SYNONYMS,
+  futbolke: BASE_SHIRT_SYNONYMS,
+  futbolok: BASE_SHIRT_SYNONYMS,
+  tshirt: BASE_SHIRT_SYNONYMS,
+  "t-shirt": BASE_SHIRT_SYNONYMS,
+  tee: BASE_SHIRT_SYNONYMS,
+};
+
 const normalizeText = (value: string | null | undefined) =>
   (value ?? "").trim().toLowerCase();
 
@@ -61,12 +79,30 @@ const buildSearchVariants = (rawQuery: string) => {
     }
   };
 
-  maybeAddVariant(normalized);
-  maybeAddVariant(transliterateRuToEn(normalized));
+  const addSynonyms = (value: string) => {
+    if (!value) return;
+    Object.entries(SEARCH_SYNONYMS).forEach(([trigger, synonyms]) => {
+      if (!trigger) return;
+      if (value.includes(trigger) || trigger.includes(value)) {
+        synonyms.forEach(maybeAddVariant);
+      }
+    });
+  };
+
+  const addWithSynonyms = (value: string) => {
+    maybeAddVariant(value);
+    addSynonyms(value);
+  };
+
+  const normalizedLatin = transliterateRuToEn(normalized);
+
+  addWithSynonyms(normalized);
+  addWithSynonyms(normalizedLatin);
 
   words.forEach((word) => {
-    maybeAddVariant(word);
-    maybeAddVariant(transliterateRuToEn(word));
+    addWithSynonyms(word);
+    const latinWord = transliterateRuToEn(word);
+    addWithSynonyms(latinWord);
   });
 
   return Array.from(variants);

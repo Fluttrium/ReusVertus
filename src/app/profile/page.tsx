@@ -72,7 +72,7 @@ export default function ProfilePage() {
         {!user ? (
           <div className="bg-bg-2 rounded-lg p-8 mb-12">
             <h2 className="text-2xl uppercase mb-2 text-center">Профиль</h2>
-            <div className="h-[2px] bg-black/15 w-full mb-6" aria-hidden="true" />
+            <div className="h-[2px] bg-black/15 w-3/4 max-w-xs mx-auto mb-6" aria-hidden="true" />
             <div className="flex gap-4 justify-center mb-6">
               <button
                 onClick={() => {
