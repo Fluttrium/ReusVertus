@@ -8,7 +8,7 @@ const looks = [
   { id: 1, title: "Look 1", file: "look1/IMG_4219.JPEG", hoverFile: "look1/IMG_1786.jpg" },
   { id: 2, title: "Look 2", file: "look2/IMG_4(2).JPEG", hoverFile: "look2/IMG_1752.jpg" },
   { id: 3, title: "Look 3", file: "look3/2.0.JPG", hoverFile: "look3/IMG_4233.JPEG" },
-  { id: 4, title: "Look 4", file: "look4/IMG_3108.PNG", hoverFile: "/look4/IMG_3108.PNG" },
+  { id: 4, title: "Look 4", file: "look4/IMG_3108.PNG", hoverFile: "/look4/IMG_3109.PNG" },
   { id: 5, title: "Look 5", file: "look5/IMG_1790.jpg", hoverFile: "look5/IMG_1791.jpg" },
   { id: 6, title: "Look 6", file: "look6/IMG_4217.JPEG", hoverFile: "look6/IMG_1772.JPEG" },
   { id: 7, title: "Look 7", file: "look7/IMG_1818(1).jpg", hoverFile: "look7/IMG_4210.JPEG" },
