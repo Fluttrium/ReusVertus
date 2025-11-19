@@ -58,7 +58,7 @@ export default function Home() {
 
           <div className="group relative w-full h-[90vh] bg-bg-2 overflow-hidden">
             <Image
-              src="/IMG_2727.JPG"
+              src="/IMG_4212.JPG"
               alt="коллекция Reus Vertus"
               fill
               className="object-cover"

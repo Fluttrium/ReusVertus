@@ -13,7 +13,7 @@ const FALLBACK_PRODUCT_IMAGES = [
   "/IMG_2530.JPG",
   "/IMG_2524(1).JPG",
   "/IMG_2520.JPG",
-  "/IMG_2523(1).jpg",
+  "/IMG_2523(1).JPG",
 ];
 
 interface Product {

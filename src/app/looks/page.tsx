@@ -29,7 +29,11 @@ export default function LooksPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
           {looks.map((look, index) => (
-            <div key={look.id} className="relative aspect-[3/4] overflow-hidden rounded-lg bg-bg-2 group">
+            <div
+              key={look.id}
+              className="relative aspect-[3/4] overflow-hidden rounded-lg bg-bg-2 group cursor-pointer"
+              tabIndex={0}
+            >
               <Image
                 src={buildImageSrc(look.file)}
                 alt=""
@@ -43,10 +47,10 @@ export default function LooksPage() {
                 alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="object-cover absolute inset-0 opacity-0 scale-105 transition-transform duration-500 group-hover:opacity-100 group-hover:scale-110"
+                className="object-cover absolute inset-0 opacity-0 scale-105 transition-transform duration-500 group-hover:opacity-100 group-hover:scale-110 group-focus:opacity-100 group-focus:scale-110 group-active:opacity-100 group-active:scale-110"
               />
               <div className="absolute inset-x-0 bottom-0 p-4">
-                <span className="text-white uppercase tracking-[0.2em] text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white uppercase tracking-[0.2em] text-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100 group-active:opacity-100">
                   {look.title}
                 </span>
               </div>
