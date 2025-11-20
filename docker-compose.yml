@@ -15,7 +15,7 @@ services:
       - ./public:/app/public:ro
     command: >
       sh -c "
-        npx prisma migrate deploy &&
+        npm exec -- prisma migrate deploy &&
         node server.js
       "
 
