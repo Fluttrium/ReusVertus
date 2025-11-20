@@ -30,8 +30,7 @@ jobs:
           VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus' }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \
-            DATABASE_URL="$DATABASE_URL" bash -s << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
             mkdir -p /var/www/reusvertus
             cd /var/www/reusvertus
             
@@ -82,29 +81,37 @@ jobs:
               touch .env
             fi
             
-            # Устанавливаем DATABASE_URL - сначала пробуем из переменной окружения, иначе используем значение по умолчанию
-            if [ -z "\$DATABASE_URL" ]; then
-              DATABASE_URL="postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus"
-            fi
+            # Устанавливаем DATABASE_URL - используем значение по умолчанию (захардкожено)
+            DATABASE_URL="postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus"
             export DATABASE_URL
-            DB_URL="\$DATABASE_URL"
             
             # Удаляем старую строку DATABASE_URL если она есть (любую, с кавычками или без)
             sed -i.bak '/^DATABASE_URL=/d' .env 2>/dev/null || grep -v "^DATABASE_URL" .env > .env.tmp && mv .env.tmp .env 2>/dev/null || true
             # Добавляем новую строку DATABASE_URL без кавычек
-            echo "DATABASE_URL=\$DB_URL" >> .env
+            echo "DATABASE_URL=\$DATABASE_URL" >> .env
             
-            # Проверяем, что DATABASE_URL записан в .env
+            # Проверяем, что DATABASE_URL записан в .env и начинается с postgresql://
             if ! grep -q "^DATABASE_URL=" .env; then
               echo "ERROR: Failed to write DATABASE_URL to .env file!" >&2
               exit 1
             fi
             
-            # Выводим для отладки (показываем только что переменная установлена, без значения)
-            echo "DATABASE_URL is set in .env file"
+            # Проверяем содержимое .env файла (первые 50 символов для безопасности)
+            ENV_VALUE=\$(grep "^DATABASE_URL=" .env | cut -d'=' -f2- | head -c 50)
+            if ! echo "\$ENV_VALUE" | grep -q "^postgresql://"; then
+              echo "ERROR: DATABASE_URL in .env file is invalid!" >&2
+              echo "First 50 chars: [\$ENV_VALUE]" >&2
+              echo "Full line: [\$(grep '^DATABASE_URL=' .env)]" >&2
+              exit 1
+            fi
+            
+            echo "DATABASE_URL is set correctly in .env file"
+            
+            # Показываем первые 50 символов для проверки (безопасно)
+            echo "DATABASE_URL starts with: \$(grep '^DATABASE_URL=' .env | cut -d'=' -f2- | head -c 50)"
             
             # Убеждаемся, что DATABASE_URL экспортирован в окружение для docker-compose
-            export DATABASE_URL="\$DB_URL"
+            export DATABASE_URL
             
             $DOCKER_COMPOSE_CMD down || true
             $DOCKER_COMPOSE_CMD pull || true
