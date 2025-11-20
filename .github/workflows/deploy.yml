@@ -74,9 +74,12 @@ jobs:
             
             echo "DEPLOY_PATH: $DEPLOY_PATH"
             
-            # Настраиваем git credentials если токен есть
+            # Формируем URL с токеном для использования в remote
             if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
               echo "Настраиваем git credentials с токеном (длина токена: ${#GITHUB_TOKEN})"
+              
+              # Формируем URL с токеном
+              GIT_URL_WITH_TOKEN="https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git"
               
               # Настраиваем credential helper
               git config --global credential.helper store
@@ -88,16 +91,11 @@ jobs:
               # Проверяем, что файл создан
               if [ -f ~/.git-credentials ]; then
                 echo "Git credentials файл создан"
-                # Показываем первые несколько символов для проверки (без токена)
-                head -c 20 ~/.git-credentials
-                echo "..."
               else
                 echo "Ошибка: не удалось создать файл credentials"
               fi
               
-              # Также настраиваем URL с токеном напрямую в remote для надежности
-              GIT_URL_WITH_TOKEN="https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git"
-              echo "Git credentials настроены"
+              echo "Git credentials настроены, используем URL с токеном"
             else
               echo "GITHUB_TOKEN не установлен, используем публичный доступ"
               GIT_URL_WITH_TOKEN="https://github.com/Fluttrium/ReusVertus.git"
@@ -106,13 +104,13 @@ jobs:
             # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
             
-            echo "Используем захардкоженный URL: https://github.com/Fluttrium/ReusVertus.git"
+            echo "Используем URL: ${GIT_URL_WITH_TOKEN%%@*}" # Показываем только часть до @
             
             # Инициализируем git репозиторий, если его нет
             if [ ! -d .git ]; then
               echo "Инициализируем git репозиторий..."
               git init
-              git remote add origin "https://github.com/Fluttrium/ReusVertus.git" || git remote set-url origin "https://github.com/Fluttrium/ReusVertus.git"
+              git remote add origin "$GIT_URL_WITH_TOKEN" || git remote set-url origin "$GIT_URL_WITH_TOKEN"
               
               # Настраиваем git для неинтерактивного режима
               git config --global user.email "deploy@github-actions"
@@ -148,25 +146,20 @@ jobs:
               echo "Удаляем старый remote..."
               git remote remove origin 2>/dev/null || echo "Remote не существовал"
               
-              # Используем URL с токеном если он есть
-              if [ -n "$GIT_URL_WITH_TOKEN" ]; then
-                REMOTE_URL_TO_USE="$GIT_URL_WITH_TOKEN"
-                echo "Используем URL с токеном для remote"
-              else
-                REMOTE_URL_TO_USE="https://github.com/Fluttrium/ReusVertus.git"
-                echo "Используем публичный URL для remote"
-              fi
+              # Используем URL с токеном
+              echo "Используем URL с токеном для remote"
               
               # Добавляем remote
               echo "Добавляем remote origin..."
-              if git remote add origin "$REMOTE_URL_TO_USE" 2>&1; then
+              if git remote add origin "$GIT_URL_WITH_TOKEN" 2>&1; then
                 echo "Remote добавлен успешно"
               else
                 echo "Ошибка при добавлении remote, пробуем set-url..."
-                git remote set-url origin "$REMOTE_URL_TO_USE" 2>&1 || {
+                git remote set-url origin "$GIT_URL_WITH_TOKEN" 2>&1 || {
                   echo "Критическая ошибка: не удалось установить remote"
                   echo "Проверяем текущие remotes:"
                   git remote -v
+                  echo "GIT_URL_WITH_TOKEN длина: ${#GIT_URL_WITH_TOKEN}"
                   exit 1
                 }
               fi
