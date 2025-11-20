@@ -95,7 +95,13 @@ jobs:
             # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
             
-            echo "Итоговый GIT_URL: ${GIT_URL%%@*}" # Показываем только часть до @ для безопасности
+            # Проверяем, что GIT_URL установлен
+            if [ -z "$GIT_URL" ]; then
+              echo "Ошибка: GIT_URL пустой после установки!"
+              exit 1
+            fi
+            
+            echo "Итоговый GIT_URL установлен (длина: ${#GIT_URL})"
             
             # Инициализируем git репозиторий, если его нет
             if [ ! -d .git ]; then
@@ -133,31 +139,29 @@ jobs:
             else
               echo "Обновляем код из репозитория..."
               
-              # Проверяем, что remote существует
-              if ! git remote get-url origin &>/dev/null; then
-                echo "Remote origin не найден, добавляем..."
-                git remote add origin "$GIT_URL"
-              else
-                # Обновляем remote URL на случай если токен изменился
-                git remote set-url origin "$GIT_URL"
+              # Проверяем GIT_URL перед использованием
+              echo "Используем GIT_URL: ${GIT_URL%%@*}" # Показываем только часть до @
+              
+              # Удаляем старый remote если есть
+              git remote remove origin 2>/dev/null || true
+              
+              # Добавляем remote с правильным URL
+              echo "Добавляем remote origin с URL..."
+              git remote add origin "$GIT_URL"
+              
+              # Проверяем, что remote добавлен правильно
+              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+              if [ -z "$REMOTE_URL" ]; then
+                echo "Ошибка: не удалось установить remote URL"
+                echo "GIT_URL значение: ${GIT_URL:0:50}..."
+                exit 1
               fi
+              
+              echo "Remote URL установлен успешно"
               
               # Настраиваем git для неинтерактивного режима
               git config --global user.email "deploy@github-actions"
               git config --global user.name "GitHub Actions"
-              
-              # Проверяем remote URL
-              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-              echo "Remote URL: $REMOTE_URL"
-              
-              # Если remote URL пустой или неправильный, переустанавливаем
-              if [ -z "$REMOTE_URL" ] || [ "$REMOTE_URL" = "" ]; then
-                echo "Remote URL пустой, переустанавливаем..."
-                git remote remove origin 2>/dev/null || true
-                git remote add origin "$GIT_URL"
-                REMOTE_URL=$(git remote get-url origin)
-                echo "Новый Remote URL: $REMOTE_URL"
-              fi
               
               # Обновляем код
               echo "Выполняем fetch..."
