@@ -31,66 +31,86 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus' }}
         run: |
           ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
+            set -e
+            
+            # Создаем директорию проекта
             mkdir -p /var/www/reusvertus
-            cd /var/www/reusvertus
+            cd /var/www/reusvertus || exit 1
             
+            # Настраиваем Git
             export GIT_TERMINAL_PROMPT=0
-            git config --global user.email "deploy@github-actions"
-            git config --global user.name "GitHub Actions"
+            git config --global user.email "deploy@github-actions" || true
+            git config --global user.name "GitHub Actions" || true
             
+            # Клонируем или обновляем репозиторий
             if [ ! -d .git ]; then
-              git init
-              git remote add origin https://github.com/Fluttrium/ReusVertus.git
-              git fetch origin
-              if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
-                git checkout -b main origin/main
-              elif git ls-remote --heads origin master 2>/dev/null | grep -q master; then
-                git checkout -b master origin/master
-              else
-                exit 1
-              fi
+              echo "Инициализация нового репозитория..."
+              rm -rf /var/www/reusvertus/* /var/www/reusvertus/.* 2>/dev/null || true
+              git clone https://github.com/Fluttrium/ReusVertus.git /tmp/reusvertus-tmp || exit 1
+              mv /tmp/reusvertus-tmp/* /tmp/reusvertus-tmp/.* /var/www/reusvertus/ 2>/dev/null || true
+              rm -rf /tmp/reusvertus-tmp
+              cd /var/www/reusvertus
             else
+              echo "Обновление существующего репозитория..."
               git remote remove origin 2>/dev/null || true
-              git remote add origin https://github.com/Fluttrium/ReusVertus.git
-              git fetch origin
+              git remote add origin https://github.com/Fluttrium/ReusVertus.git 2>/dev/null || true
+              git fetch origin || exit 1
               if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
-                git reset --hard origin/main
+                git checkout main 2>/dev/null || git checkout -b main origin/main
+                git reset --hard origin/main || exit 1
               elif git ls-remote --heads origin master 2>/dev/null | grep -q master; then
-                git reset --hard origin/master
+                git checkout master 2>/dev/null || git checkout -b master origin/master
+                git reset --hard origin/master || exit 1
               else
+                echo "ERROR: Не найдена ветка main или master" >&2
                 exit 1
               fi
-              git clean -fd
+              git clean -fd || true
             fi
             
-            if command -v docker-compose &> /dev/null; then
-              DOCKER_COMPOSE_CMD="docker-compose"
-            elif docker compose version &> /dev/null; then
+            # Устанавливаем Docker Compose
+            echo "Проверка Docker Compose..."
+            if docker compose version &> /dev/null 2>&1; then
               DOCKER_COMPOSE_CMD="docker compose"
+              echo "Используется: docker compose"
+            elif command -v docker-compose &> /dev/null; then
+              DOCKER_COMPOSE_CMD="docker-compose"
+              echo "Используется: docker-compose"
             else
+              echo "Установка Docker Compose..."
               sudo apt-get update -qq
-              sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose
-              if command -v docker-compose &> /dev/null; then
-                DOCKER_COMPOSE_CMD="docker-compose"
-              else
+              # Пробуем установить docker-compose-plugin (новый способ)
+              if sudo apt-get install -y docker-compose-plugin 2>/dev/null; then
                 DOCKER_COMPOSE_CMD="docker compose"
+                echo "Установлен: docker compose (plugin)"
+              # Пробуем установить старый docker-compose
+              elif sudo apt-get install -y docker-compose 2>/dev/null; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+                echo "Установлен: docker-compose (standalone)"
+              else
+                echo "ERROR: Не удалось установить Docker Compose" >&2
+                exit 1
               fi
             fi
             
+            # Проверяем, что команда работает
+            $DOCKER_COMPOSE_CMD version || (echo "ERROR: Docker Compose не работает" >&2 && exit 1)
+            
+            # Настраиваем .env файл
             if [ ! -f .env ]; then
               touch .env
             fi
             
-            # Устанавливаем DATABASE_URL - используем значение по умолчанию (захардкожено)
+            # Устанавливаем DATABASE_URL
             DATABASE_URL="postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus"
             export DATABASE_URL
             
-            # Удаляем старую строку DATABASE_URL если она есть (любую, с кавычками или без)
+            # Удаляем старую строку DATABASE_URL если она есть
             sed -i.bak '/^DATABASE_URL=/d' .env 2>/dev/null || grep -v "^DATABASE_URL" .env > .env.tmp && mv .env.tmp .env 2>/dev/null || true
-            # Добавляем новую строку DATABASE_URL напрямую (без использования переменной, так как heredoc с одинарными кавычками)
+            # Добавляем новую строку DATABASE_URL
             echo "DATABASE_URL=postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus" >> .env
             
-            # Проверяем, что DATABASE_URL записан в .env и начинается с postgresql://
+            # Проверяем, что DATABASE_URL записан в .env
             if ! grep -q "^DATABASE_URL=" .env; then
               echo "ERROR: Failed to write DATABASE_URL to .env file!" >&2
               exit 1
@@ -106,15 +126,116 @@ jobs:
             
             echo "DATABASE_URL is set correctly in .env file"
             
+            # Настраиваем Nginx
+            echo "Настройка Nginx..."
+            if ! command -v nginx &> /dev/null; then
+              echo "Установка Nginx..."
+              sudo apt-get update -qq
+              sudo apt-get install -y nginx || (echo "ERROR: Не удалось установить nginx" >&2 && exit 1)
+            fi
+            
+            # Устанавливаем certbot для SSL сертификатов
+            if ! command -v certbot &> /dev/null; then
+              echo "Установка Certbot..."
+              sudo apt-get update -qq
+              sudo apt-get install -y certbot python3-certbot-nginx || echo "Предупреждение: не удалось установить certbot" >&2
+            fi
+            
+            if [ -f nginx.conf ]; then
+              # Проверяем наличие SSL сертификатов
+              if [ ! -f /etc/letsencrypt/live/ruesvertes.ru/fullchain.pem ]; then
+                echo "SSL сертификаты не найдены. Получение сертификатов..."
+                
+                # Создаем временную конфигурацию без HTTPS для получения сертификатов
+                cat > /tmp/nginx-temp.conf << 'NGINX_TEMP'
+server {
+    listen 80;
+    server_name ruesvertes.ru www.ruesvertes.ru;
+    
+    location / {
+        proxy_pass http://localhost:3300;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+}
+NGINX_TEMP
+                
+                sudo cp /tmp/nginx-temp.conf /etc/nginx/sites-available/reusvertus.conf
+                sudo ln -sf /etc/nginx/sites-available/reusvertus.conf /etc/nginx/sites-enabled/reusvertus.conf
+                sudo rm -f /etc/nginx/sites-enabled/default
+                sudo mkdir -p /var/www/html
+                
+                if sudo nginx -t; then
+                  sudo systemctl restart nginx || echo "Предупреждение: не удалось перезапустить nginx" >&2
+                  
+                  # Получаем сертификаты
+                  if sudo certbot certonly --nginx -d ruesvertes.ru -d www.ruesvertes.ru --non-interactive --agree-tos --email admin@ruesvertes.ru 2>/dev/null; then
+                    echo "SSL сертификаты получены успешно"
+                  else
+                    echo "Предупреждение: не удалось получить SSL сертификаты автоматически" >&2
+                    echo "Попробуйте получить сертификаты вручную: sudo certbot --nginx -d ruesvertes.ru -d www.ruesvertes.ru" >&2
+                  fi
+                fi
+              else
+                echo "SSL сертификаты уже установлены"
+              fi
+              
+              # Применяем финальную конфигурацию с HTTPS
+              sudo cp nginx.conf /etc/nginx/sites-available/reusvertus.conf
+              sudo ln -sf /etc/nginx/sites-available/reusvertus.conf /etc/nginx/sites-enabled/reusvertus.conf
+              sudo rm -f /etc/nginx/sites-enabled/default
+              
+              # Проверяем конфигурацию nginx
+              if sudo nginx -t; then
+                sudo systemctl reload nginx || sudo systemctl restart nginx || echo "Предупреждение: не удалось перезагрузить nginx" >&2
+                echo "Nginx конфигурация применена успешно"
+              else
+                echo "ERROR: Ошибка в конфигурации nginx. Проверьте логи." >&2
+                sudo nginx -t
+                # Если сертификатов нет, применяем конфигурацию без HTTPS
+                if [ ! -f /etc/letsencrypt/live/ruesvertes.ru/fullchain.pem ]; then
+                  echo "Применяем конфигурацию без HTTPS (сертификаты отсутствуют)..." >&2
+                  sed '/^# HTTPS сервер$/,/^}$/d' nginx.conf | sed 's/return 301 https/# return 301 https/' > /tmp/nginx-no-https.conf
+                  sudo cp /tmp/nginx-no-https.conf /etc/nginx/sites-available/reusvertus.conf
+                  sudo nginx -t && sudo systemctl reload nginx || true
+                else
+                  exit 1
+                fi
+              fi
+            else
+              echo "Предупреждение: nginx.conf не найден" >&2
+            fi
+            
             # Убеждаемся, что DATABASE_URL экспортирован в окружение для docker-compose
             export DATABASE_URL
             
+            # Останавливаем старые контейнеры
+            echo "Остановка старых контейнеров..."
             $DOCKER_COMPOSE_CMD down || true
-            $DOCKER_COMPOSE_CMD pull || true
-            $DOCKER_COMPOSE_CMD up -d --build
+            
+            # Собираем и запускаем контейнеры
+            echo "Сборка и запуск контейнеров..."
+            $DOCKER_COMPOSE_CMD up -d --build || exit 1
             
             sleep 5
+            
+            # Показываем логи
+            echo "Логи приложения:"
             $DOCKER_COMPOSE_CMD logs --tail=50 app || true
+            
+            # Проверяем статус контейнеров
+            echo "Статус контейнеров:"
+            $DOCKER_COMPOSE_CMD ps || true
           ENDSSH
       
       - name: Cleanup
