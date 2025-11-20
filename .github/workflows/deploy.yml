@@ -144,19 +144,17 @@ jobs:
                 }
               fi
               
-              # Проверяем, что remote добавлен правильно
-              echo "Проверяем remote URL..."
-              REMOTE_URL=$(git remote get-url origin 2>&1)
-              echo "Remote URL результат: $REMOTE_URL"
+              # Проверяем, что remote добавлен правильно через git remote -v
+              echo "Проверяем remote через git remote -v:"
+              git remote -v
               
-              if [ -z "$REMOTE_URL" ] || [[ "$REMOTE_URL" == *"error"* ]] || [[ "$REMOTE_URL" == *"fatal"* ]]; then
-                echo "Ошибка: remote URL не установлен или ошибка"
-                echo "Список всех remotes:"
-                git remote -v
+              # Если remote есть в списке, значит все ок
+              if git remote | grep -q "^origin$"; then
+                echo "Remote origin успешно установлен"
+              else
+                echo "Ошибка: remote origin не найден"
                 exit 1
               fi
-              
-              echo "Remote URL установлен: $REMOTE_URL"
               
               # Настраиваем git для неинтерактивного режима
               git config --global user.email "deploy@github-actions"
