@@ -76,47 +76,33 @@ jobs:
             echo "GIT_REPO: $GIT_REPO"
             echo "GITHUB_TOKEN установлен: $([ -n "$GITHUB_TOKEN" ] && echo 'да' || echo 'нет')"
             
-            # Формируем URL с токеном напрямую - используем захардкоженный путь
-            GIT_URL=""
-            
-            if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ]; then
-              echo "Используем GITHUB_TOKEN для аутентификации"
-              echo "Длина токена: ${#GITHUB_TOKEN}"
+            # Формируем URL с токеном используя printf для надежности
+            if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
+              echo "Используем GITHUB_TOKEN для аутентификации (длина: ${#GITHUB_TOKEN})"
               
-              # Формируем URL по частям для надежности
-              GIT_URL="https://"
-              GIT_URL="${GIT_URL}${GITHUB_TOKEN}"
-              GIT_URL="${GIT_URL}@github.com/Fluttrium/ReusVertus.git"
-              
-              echo "GIT_URL сформирован, проверка длины: ${#GIT_URL}"
+              # Используем printf для формирования URL
+              GIT_URL=$(printf "https://%s@github.com/Fluttrium/ReusVertus.git" "$GITHUB_TOKEN")
               
               # Настраиваем git для использования токена без запроса пароля
               git config --global credential.helper store
-              echo "https://${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+              printf "https://%s@github.com\n" "$GITHUB_TOKEN" > ~/.git-credentials
               chmod 600 ~/.git-credentials
               echo "Git credentials настроены"
             else
-              echo "GITHUB_TOKEN не установлен, используем публичный доступ"
+              echo "GITHUB_TOKEN не установлен или невалиден, используем публичный доступ"
               GIT_URL="https://github.com/Fluttrium/ReusVertus.git"
             fi
             
             # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
             
-            # Проверяем, что GIT_URL установлен
-            if [ -z "$GIT_URL" ] || [ -z "${GIT_URL// }" ]; then
-              echo "Ошибка: GIT_URL пустой после установки!"
-              echo "Пробуем использовать захардкоженный URL без токена..."
+            # Финальная проверка и fallback
+            if [ -z "$GIT_URL" ] || [ ${#GIT_URL} -lt 20 ]; then
+              echo "Предупреждение: GIT_URL пустой или слишком короткий, используем публичный URL"
               GIT_URL="https://github.com/Fluttrium/ReusVertus.git"
             fi
             
-            # Финальная проверка
-            if [ -z "$GIT_URL" ]; then
-              echo "Критическая ошибка: GIT_URL все еще пустой!"
-              exit 1
-            fi
-            
-            echo "Итоговый GIT_URL установлен (длина: ${#GIT_URL}, начало: ${GIT_URL:0:20}...)"
+            echo "Итоговый GIT_URL установлен (длина: ${#GIT_URL})"
             
             # Инициализируем git репозиторий, если его нет
             if [ ! -d .git ]; then
