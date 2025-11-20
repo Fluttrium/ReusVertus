@@ -147,28 +147,24 @@ jobs:
                 echo "SSL сертификаты не найдены. Получение сертификатов..."
                 
                 # Создаем временную конфигурацию без HTTPS для получения сертификатов
-                cat > /tmp/nginx-temp.conf << 'NGINX_TEMP'
-server {
-    listen 80;
-    server_name ruesvertes.ru www.ruesvertes.ru;
-    
-    location / {
-        proxy_pass http://localhost:3300;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-    
-    location /.well-known/acme-challenge/ {
-        root /var/www/html;
-    }
-}
-NGINX_TEMP
+                echo "server {" > /tmp/nginx-temp.conf
+                echo "    listen 80;" >> /tmp/nginx-temp.conf
+                echo "    server_name ruesvertes.ru www.ruesvertes.ru;" >> /tmp/nginx-temp.conf
+                echo "    location / {" >> /tmp/nginx-temp.conf
+                echo "        proxy_pass http://localhost:3300;" >> /tmp/nginx-temp.conf
+                echo "        proxy_http_version 1.1;" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header Upgrade \$http_upgrade;" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header Connection 'upgrade';" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header Host \$host;" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> /tmp/nginx-temp.conf
+                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> /tmp/nginx-temp.conf
+                echo "        proxy_cache_bypass \$http_upgrade;" >> /tmp/nginx-temp.conf
+                echo "    }" >> /tmp/nginx-temp.conf
+                echo "    location /.well-known/acme-challenge/ {" >> /tmp/nginx-temp.conf
+                echo "        root /var/www/html;" >> /tmp/nginx-temp.conf
+                echo "    }" >> /tmp/nginx-temp.conf
+                echo "}" >> /tmp/nginx-temp.conf
                 
                 sudo cp /tmp/nginx-temp.conf /etc/nginx/sites-available/reusvertus.conf
                 sudo ln -sf /etc/nginx/sites-available/reusvertus.conf /etc/nginx/sites-enabled/reusvertus.conf
