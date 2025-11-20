@@ -11,7 +11,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:-postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./public:/app/public:ro
     command: >
