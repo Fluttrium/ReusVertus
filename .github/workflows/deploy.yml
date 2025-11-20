@@ -76,6 +76,10 @@ jobs:
               fi
             fi
             
+            if [ ! -f .env ]; then
+              touch .env
+            fi
+            
             $DOCKER_COMPOSE_CMD down || true
             $DOCKER_COMPOSE_CMD pull || true
             $DOCKER_COMPOSE_CMD up -d --build
