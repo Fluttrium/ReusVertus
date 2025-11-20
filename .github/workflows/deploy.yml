@@ -134,76 +134,18 @@ jobs:
               sudo apt-get install -y nginx || (echo "ERROR: Не удалось установить nginx" >&2 && exit 1)
             fi
             
-            # Устанавливаем certbot для SSL сертификатов
-            if ! command -v certbot &> /dev/null; then
-              echo "Установка Certbot..."
-              sudo apt-get update -qq
-              sudo apt-get install -y certbot python3-certbot-nginx || echo "Предупреждение: не удалось установить certbot" >&2
-            fi
-            
             if [ -f nginx.conf ]; then
-              # Проверяем наличие SSL сертификатов
-              SSL_CERTS_EXIST=false
-              if [ -f /etc/letsencrypt/live/ruesvertes.ru/fullchain.pem ]; then
-                SSL_CERTS_EXIST=true
-                echo "SSL сертификаты уже установлены"
-              else
-                echo "SSL сертификаты не найдены. Попытка получения сертификатов..."
-                
-                # Создаем временную конфигурацию без HTTPS для получения сертификатов
-                echo "server {" > /tmp/nginx-temp.conf
-                echo "    listen 80;" >> /tmp/nginx-temp.conf
-                echo "    server_name ruesvertes.ru www.ruesvertes.ru;" >> /tmp/nginx-temp.conf
-                echo "    location /.well-known/acme-challenge/ {" >> /tmp/nginx-temp.conf
-                echo "        root /var/www/html;" >> /tmp/nginx-temp.conf
-                echo "    }" >> /tmp/nginx-temp.conf
-                echo "    location / {" >> /tmp/nginx-temp.conf
-                echo "        proxy_pass http://localhost:3300;" >> /tmp/nginx-temp.conf
-                echo "        proxy_http_version 1.1;" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header Upgrade \$http_upgrade;" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header Connection 'upgrade';" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header Host \$host;" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header X-Real-IP \$remote_addr;" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;" >> /tmp/nginx-temp.conf
-                echo "        proxy_set_header X-Forwarded-Proto \$scheme;" >> /tmp/nginx-temp.conf
-                echo "        proxy_cache_bypass \$http_upgrade;" >> /tmp/nginx-temp.conf
-                echo "    }" >> /tmp/nginx-temp.conf
-                echo "}" >> /tmp/nginx-temp.conf
-                
-                sudo cp /tmp/nginx-temp.conf /etc/nginx/sites-available/reusvertus.conf
-                sudo ln -sf /etc/nginx/sites-available/reusvertus.conf /etc/nginx/sites-enabled/reusvertus.conf
-                sudo rm -f /etc/nginx/sites-enabled/default
-                sudo mkdir -p /var/www/html
-                sudo chown -R www-data:www-data /var/www/html || true
-                
-                if sudo nginx -t; then
-                  sudo systemctl restart nginx || echo "Предупреждение: не удалось перезапустить nginx" >&2
-                  
-                  # Пробуем получить сертификаты через webroot (более надежный метод)
-                  if sudo certbot certonly --webroot -w /var/www/html -d ruesvertes.ru -d www.ruesvertes.ru --non-interactive --agree-tos --email admin@ruesvertes.ru 2>&1; then
-                    echo "SSL сертификаты получены успешно через webroot"
-                    SSL_CERTS_EXIST=true
-                  elif sudo certbot certonly --nginx -d ruesvertes.ru -d www.ruesvertes.ru --non-interactive --agree-tos --email admin@ruesvertes.ru 2>&1; then
-                    echo "SSL сертификаты получены успешно через nginx"
-                    SSL_CERTS_EXIST=true
-                  else
-                    echo "Предупреждение: не удалось получить SSL сертификаты автоматически" >&2
-                    echo "Убедитесь, что домены ruesvertes.ru и www.ruesvertes.ru указывают на этот сервер" >&2
-                    echo "Попробуйте получить сертификаты вручную: sudo certbot --nginx -d ruesvertes.ru -d www.ruesvertes.ru" >&2
-                    SSL_CERTS_EXIST=false
-                  fi
-                else
-                  echo "Предупреждение: ошибка в временной конфигурации nginx" >&2
-                  SSL_CERTS_EXIST=false
-                fi
-              fi
+              # Создаем директорию для ACME challenge
+              sudo mkdir -p /var/www/html
+              sudo chown -R www-data:www-data /var/www/html || sudo chown -R nginx:nginx /var/www/html || true
               
-              # Применяем финальную конфигурацию
-              if [ "$SSL_CERTS_EXIST" = true ]; then
-                echo "Применяем конфигурацию с HTTPS..."
+              # Проверяем наличие SSL сертификатов
+              if [ -f /etc/letsencrypt/live/ruesvertes.ru/fullchain.pem ]; then
+                echo "SSL сертификаты найдены. Применяем конфигурацию с HTTPS..."
                 sudo cp nginx.conf /etc/nginx/sites-available/reusvertus.conf
               else
-                echo "Применяем конфигурацию без HTTPS (сертификаты отсутствуют)..."
+                echo "SSL сертификаты не найдены. Применяем конфигурацию без HTTPS..."
+                echo "Для настройки SSL вручную выполните: sudo certbot --nginx -d ruesvertes.ru -d www.ruesvertes.ru"
                 # Создаем конфигурацию без HTTPS блока и без редиректа
                 sed '/^# HTTPS сервер$/,/^}$/d' nginx.conf | sed 's/return 301 https:/# return 301 https:/' > /tmp/nginx-no-https.conf
                 sudo cp /tmp/nginx-no-https.conf /etc/nginx/sites-available/reusvertus.conf
