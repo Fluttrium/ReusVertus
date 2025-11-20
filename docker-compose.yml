@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reusvertus_app
+    restart: unless-stopped
+    ports:
+      - "3300:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./public:/app/public:ro
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        node server.js
+      "
+

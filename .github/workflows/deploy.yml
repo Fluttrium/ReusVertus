@@ -1,0 +1,142 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
+      
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
+          GIT_REPO: ${{ secrets.GIT_REPO || 'https://github.com/Fluttrium/ReusVertus.git' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
+            # Создаем директорию, если её нет
+            mkdir -p $DEPLOY_PATH
+            cd $DEPLOY_PATH
+            
+            # Инициализируем git репозиторий, если его нет
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin $GIT_REPO
+              git fetch origin
+              git checkout -b main origin/main || git checkout -b master origin/master || true
+            else
+              # Обновляем код
+              git fetch origin
+              git reset --hard origin/main || git reset --hard origin/master || true
+              git clean -fd
+            fi
+            
+            # Запускаем docker compose
+            docker compose down || true
+            docker compose pull || true
+            docker compose up -d --build
+            
+            # Проверяем статус
+            docker compose ps
+          ENDSSH
+      
+      - name: Setup SSL Certificate
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
+          DOMAIN: ${{ secrets.DOMAIN || 'ruesvertes.ru' }}
+          EMAIL: ${{ secrets.EMAIL }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
+            # Устанавливаем certbot, если его нет
+            if ! command -v certbot &> /dev/null; then
+              sudo apt-get update -qq
+              sudo apt-get install -y certbot python3-certbot-nginx
+            fi
+            
+            # Проверяем, существует ли сертификат
+            if [ ! -f /etc/letsencrypt/live/$DOMAIN/fullchain.pem ]; then
+              # Временно настраиваем nginx для HTTP (для верификации Let's Encrypt)
+              sudo tee /etc/nginx/sites-available/ruesvertes.ru > /dev/null << 'NGINXCONF'
+            server {
+                listen 80;
+                server_name ruesvertes.ru www.ruesvertes.ru;
+                
+                location / {
+                    proxy_pass http://localhost:3300;
+                    proxy_http_version 1.1;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+            }
+            NGINXCONF
+              sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
+              sudo rm -f /etc/nginx/sites-enabled/default
+              sudo nginx -t && sudo systemctl reload nginx
+              
+              # Получаем SSL сертификат
+              if [ -n "$EMAIL" ]; then
+                sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
+              else
+                sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --redirect
+              fi
+            else
+              # Обновляем существующий сертификат
+              sudo certbot renew --quiet
+            fi
+          ENDSSH
+      
+      - name: Setup Nginx
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
+            # Копируем конфигурацию nginx из репозитория
+            if [ -f $DEPLOY_PATH/nginx.conf ]; then
+              sudo cp $DEPLOY_PATH/nginx.conf /etc/nginx/sites-available/ruesvertes.ru
+            fi
+            
+            # Создаем симлинк, если его нет
+            sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
+            
+            # Удаляем дефолтную конфигурацию nginx, если она существует
+            sudo rm -f /etc/nginx/sites-enabled/default
+            
+            # Проверяем конфигурацию nginx
+            sudo nginx -t
+            
+            # Перезагружаем nginx
+            sudo systemctl reload nginx || sudo service nginx reload
+          ENDSSH
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+
