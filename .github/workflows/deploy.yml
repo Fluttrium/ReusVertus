@@ -63,36 +63,49 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
         run: |
           ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << ENDSSH
-            # Передаем переменные в SSH сессию
-            DEPLOY_PATH="$DEPLOY_PATH"
-            GIT_REPO="$GIT_REPO"
-            GITHUB_TOKEN="$GITHUB_TOKEN"
+            # Передаем переменные в SSH сессию из окружения GitHub Actions
+            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}"
+            GIT_REPO="${{ secrets.GIT_REPO || 'https://github.com/Fluttrium/ReusVertus.git' }}"
+            GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN || github.token }}"
             
             # Создаем директорию, если её нет
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
             
+            # Отладочная информация
+            echo "DEPLOY_PATH: $DEPLOY_PATH"
+            echo "GIT_REPO: $GIT_REPO"
+            echo "GITHUB_TOKEN установлен: $([ -n "$GITHUB_TOKEN" ] && echo 'да' || echo 'нет')"
+            
             # Подготавливаем URL для приватного репозитория
             GIT_URL="$GIT_REPO"
             
+            # Проверяем, что переменные не пустые
+            if [ -z "$GIT_REPO" ]; then
+              echo "Ошибка: GIT_REPO не установлен"
+              exit 1
+            fi
+            
             # Если используется HTTPS, настраиваем аутентификацию
             if [[ "$GIT_REPO" == https://* ]]; then
-              if [ -z "$GITHUB_TOKEN" ]; then
-                echo "Ошибка: GITHUB_TOKEN не установлен для приватного репозитория"
-                exit 1
+              if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" = "github.token" ]; then
+                echo "Предупреждение: GITHUB_TOKEN не установлен, используем публичный доступ"
+                # Для публичного репозитория токен не нужен
+              else
+                # Используем токен в URL
+                GIT_URL=$(echo "$GIT_REPO" | sed "s|https://|https://$GITHUB_TOKEN@|")
+                
+                # Настраиваем git для использования токена без запроса пароля
+                git config --global credential.helper store
+                echo "https://$GITHUB_TOKEN@github.com" > ~/.git-credentials
+                chmod 600 ~/.git-credentials
               fi
-              
-              # Используем токен в URL
-              GIT_URL=$(echo "$GIT_REPO" | sed "s|https://|https://$GITHUB_TOKEN@|")
-              
-              # Настраиваем git для использования токена без запроса пароля
-              git config --global credential.helper store
-              echo "https://$GITHUB_TOKEN@github.com" > ~/.git-credentials
-              chmod 600 ~/.git-credentials
               
               # Отключаем интерактивные запросы
               export GIT_TERMINAL_PROMPT=0
             fi
+            
+            echo "Итоговый GIT_URL: $GIT_URL"
             
             # Инициализируем git репозиторий, если его нет
             if [ ! -d .git ]; then
