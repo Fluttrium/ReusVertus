@@ -87,8 +87,8 @@ jobs:
             
             # Удаляем старую строку DATABASE_URL если она есть (любую, с кавычками или без)
             sed -i.bak '/^DATABASE_URL=/d' .env 2>/dev/null || grep -v "^DATABASE_URL" .env > .env.tmp && mv .env.tmp .env 2>/dev/null || true
-            # Добавляем новую строку DATABASE_URL без кавычек
-            echo "DATABASE_URL=\$DATABASE_URL" >> .env
+            # Добавляем новую строку DATABASE_URL напрямую (без использования переменной, так как heredoc с одинарными кавычками)
+            echo "DATABASE_URL=postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus" >> .env
             
             # Проверяем, что DATABASE_URL записан в .env и начинается с postgresql://
             if ! grep -q "^DATABASE_URL=" .env; then
