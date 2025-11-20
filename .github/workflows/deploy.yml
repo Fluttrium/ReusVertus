@@ -90,19 +90,26 @@ jobs:
             if [[ "$GIT_REPO" == https://* ]]; then
               echo "Обнаружен HTTPS URL, настраиваем аутентификацию..."
               
-              if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ]; then
-                echo "Используем GITHUB_TOKEN для аутентификации"
-                # Используем токен в URL
-                GIT_URL=$(echo "$GIT_REPO" | sed "s|https://|https://$GITHUB_TOKEN@|")
+              if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ -n "${GITHUB_TOKEN// }" ]; then
+                echo "Используем GITHUB_TOKEN для аутентификации (длина токена: ${#GITHUB_TOKEN})"
+                
+                # Удаляем префикс https:// из GIT_REPO
+                REPO_WITHOUT_PROTOCOL="${GIT_REPO#https://}"
+                echo "REPO без протокола: $REPO_WITHOUT_PROTOCOL"
+                
+                # Формируем URL с токеном
+                GIT_URL="https://${GITHUB_TOKEN}@${REPO_WITHOUT_PROTOCOL}"
+                echo "GIT_URL сформирован, длина: ${#GIT_URL}"
+                echo "GIT_URL начало: ${GIT_URL:0:30}..." # Показываем первые 30 символов
                 
                 # Настраиваем git для использования токена без запроса пароля
                 git config --global credential.helper store
-                echo "https://$GITHUB_TOKEN@github.com" > ~/.git-credentials
+                echo "https://${GITHUB_TOKEN}@github.com" > ~/.git-credentials
                 chmod 600 ~/.git-credentials
                 echo "Git credentials настроены"
               else
                 echo "GITHUB_TOKEN не установлен или пустой, используем публичный доступ"
-                # Для публичного репозитория токен не нужен, оставляем GIT_URL как есть
+                GIT_URL="$GIT_REPO"
               fi
               
               # Отключаем интерактивные запросы
@@ -112,6 +119,13 @@ jobs:
               GIT_URL="$GIT_REPO"
             else
               echo "Неизвестный формат URL, используем как есть"
+              GIT_URL="$GIT_REPO"
+            fi
+            
+            # Дополнительная проверка и отладка
+            echo "Проверка GIT_URL перед финальной проверкой:"
+            if [ -z "$GIT_URL" ]; then
+              echo "GIT_URL пустой! Пробуем использовать GIT_REPO напрямую"
               GIT_URL="$GIT_REPO"
             fi
             
