@@ -116,16 +116,22 @@ jobs:
               git config --global user.email "deploy@github-actions"
               git config --global user.name "GitHub Actions"
               
+              # Отключаем все интерактивные запросы
+              export GIT_TERMINAL_PROMPT=0
+              export GIT_ASKPASS=echo
+              git config --global core.askPass ""
+              
               # Fetch с правильной настройкой
-              GIT_TERMINAL_PROMPT=0 git fetch origin || {
+              git fetch origin || {
                 echo "Ошибка при fetch. Проверяем доступность репозитория..."
-                # Пробуем без токена (если публичный)
-                if [[ "$GIT_REPO" == https://* ]]; then
-                  git remote set-url origin "$GIT_REPO"
-                  GIT_TERMINAL_PROMPT=0 git fetch origin || exit 1
+                # Пробуем переустановить remote с токеном
+                git remote remove origin 2>/dev/null || true
+                if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
+                  eval "git remote add origin \"https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git\""
                 else
-                  exit 1
+                  git remote add origin "https://github.com/Fluttrium/ReusVertus.git"
                 fi
+                git fetch origin || exit 1
               }
               
               # Определяем основную ветку
@@ -184,15 +190,22 @@ jobs:
               git config --global user.email "deploy@github-actions"
               git config --global user.name "GitHub Actions"
               
+              # Отключаем credential helper для этого remote, используем токен из URL
+              git config --global credential.helper ""
+              export GIT_TERMINAL_PROMPT=0
+              export GIT_ASKPASS=echo
+              
               # Обновляем код
               echo "Выполняем fetch..."
-              GIT_TERMINAL_PROMPT=0 git fetch origin || {
-                echo "Ошибка при fetch. Проверяем remote..."
-                git remote -v
-                echo "Пробуем переустановить remote..."
+              git fetch origin || {
+                echo "Ошибка при fetch. Переустанавливаем remote с токеном..."
                 git remote remove origin 2>/dev/null || true
-                git remote add origin "$GIT_URL"
-                GIT_TERMINAL_PROMPT=0 git fetch origin || exit 1
+                if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
+                  eval "git remote add origin \"https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git\""
+                else
+                  git remote add origin "https://github.com/Fluttrium/ReusVertus.git"
+                fi
+                git fetch origin || exit 1
               }
               
               # Определяем текущую ветку
