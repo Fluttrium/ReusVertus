@@ -144,13 +144,27 @@ jobs:
               git config --global user.name "GitHub Actions"
               
               # Проверяем remote URL
-              echo "Remote URL: $(git remote get-url origin)"
+              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+              echo "Remote URL: $REMOTE_URL"
+              
+              # Если remote URL пустой или неправильный, переустанавливаем
+              if [ -z "$REMOTE_URL" ] || [ "$REMOTE_URL" = "" ]; then
+                echo "Remote URL пустой, переустанавливаем..."
+                git remote remove origin 2>/dev/null || true
+                git remote add origin "$GIT_URL"
+                REMOTE_URL=$(git remote get-url origin)
+                echo "Новый Remote URL: $REMOTE_URL"
+              fi
               
               # Обновляем код
+              echo "Выполняем fetch..."
               GIT_TERMINAL_PROMPT=0 git fetch origin || {
                 echo "Ошибка при fetch. Проверяем remote..."
                 git remote -v
-                exit 1
+                echo "Пробуем переустановить remote..."
+                git remote remove origin 2>/dev/null || true
+                git remote add origin "$GIT_URL"
+                GIT_TERMINAL_PROMPT=0 git fetch origin || exit 1
               }
               
               # Определяем текущую ветку
