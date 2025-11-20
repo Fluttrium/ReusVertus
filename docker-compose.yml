@@ -11,10 +11,15 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus}
     volumes:
       - ./public:/app/public:ro
     command: >
       sh -c "
+        if [ -z \"$$DATABASE_URL\" ]; then
+          echo 'ERROR: DATABASE_URL is not set!' >&2
+          exit 1
+        fi
         npx prisma migrate deploy &&
         node server.js
       "

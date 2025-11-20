@@ -28,8 +28,10 @@ jobs:
           VPS_HOST: 92.118.114.147
           VPS_USER: ${{ secrets.VPS_USER || 'root' }}
           VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus' }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << ENDSSH
+            export DATABASE_URL="$DATABASE_URL"
             mkdir -p /var/www/reusvertus
             cd /var/www/reusvertus
             
@@ -79,6 +81,17 @@ jobs:
             if [ ! -f .env ]; then
               touch .env
             fi
+            
+            # Устанавливаем DATABASE_URL из переменной окружения, секретов GitHub или используем значение по умолчанию
+            if [ -z "\$DATABASE_URL" ]; then
+              export DATABASE_URL="postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus"
+            fi
+            
+            # Удаляем старую строку DATABASE_URL если она есть
+            grep -v "^DATABASE_URL=" .env > .env.tmp 2>/dev/null || true
+            mv .env.tmp .env 2>/dev/null || true
+            # Добавляем новую строку DATABASE_URL
+            echo "DATABASE_URL=\$DATABASE_URL" >> .env
             
             $DOCKER_COMPOSE_CMD down || true
             $DOCKER_COMPOSE_CMD pull || true
