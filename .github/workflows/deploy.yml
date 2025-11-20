@@ -83,6 +83,9 @@ jobs:
             $DOCKER_COMPOSE_CMD down || true
             $DOCKER_COMPOSE_CMD pull || true
             $DOCKER_COMPOSE_CMD up -d --build
+            
+            sleep 5
+            $DOCKER_COMPOSE_CMD logs --tail=50 app || true
           ENDSSH
       
       - name: Cleanup
