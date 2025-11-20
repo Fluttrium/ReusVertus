@@ -74,9 +74,6 @@ jobs:
             
             echo "DEPLOY_PATH: $DEPLOY_PATH"
             
-            # Всегда используем публичный URL, аутентификация через credentials
-            GIT_URL="https://github.com/Fluttrium/ReusVertus.git"
-            
             # Настраиваем git credentials если токен есть
             if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
               echo "Настраиваем git credentials с токеном (длина токена: ${#GITHUB_TOKEN})"
@@ -91,13 +88,13 @@ jobs:
             # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
             
-            echo "Используем GIT_URL: $GIT_URL"
+            echo "Используем захардкоженный URL: https://github.com/Fluttrium/ReusVertus.git"
             
             # Инициализируем git репозиторий, если его нет
             if [ ! -d .git ]; then
               echo "Инициализируем git репозиторий..."
               git init
-              git remote add origin "$GIT_URL" || git remote set-url origin "$GIT_URL"
+              git remote add origin "https://github.com/Fluttrium/ReusVertus.git" || git remote set-url origin "https://github.com/Fluttrium/ReusVertus.git"
               
               # Настраиваем git для неинтерактивного режима
               git config --global user.email "deploy@github-actions"
@@ -129,25 +126,21 @@ jobs:
             else
               echo "Обновляем код из репозитория..."
               
-              # Проверяем GIT_URL перед использованием
-              echo "Используем GIT_URL: ${GIT_URL%%@*}" # Показываем только часть до @
-              
               # Удаляем старый remote если есть
               git remote remove origin 2>/dev/null || true
               
-              # Добавляем remote с правильным URL
-              echo "Добавляем remote origin с URL..."
-              git remote add origin "$GIT_URL"
+              # Добавляем remote с захардкоженным URL
+              echo "Добавляем remote origin..."
+              git remote add origin "https://github.com/Fluttrium/ReusVertus.git"
               
               # Проверяем, что remote добавлен правильно
               REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
               if [ -z "$REMOTE_URL" ]; then
                 echo "Ошибка: не удалось установить remote URL"
-                echo "GIT_URL значение: ${GIT_URL:0:50}..."
                 exit 1
               fi
               
-              echo "Remote URL установлен успешно"
+              echo "Remote URL установлен: $REMOTE_URL"
               
               # Настраиваем git для неинтерактивного режима
               git config --global user.email "deploy@github-actions"
