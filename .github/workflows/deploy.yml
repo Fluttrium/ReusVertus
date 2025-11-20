@@ -142,27 +142,35 @@ jobs:
             else
               echo "Обновляем код из репозитория..."
               
+              # ПЕРЕФОРМИРУЕМ URL ПЕРЕД ИСПОЛЬЗОВАНИЕМ
+              if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ] && [ ${#GITHUB_TOKEN} -gt 10 ]; then
+                GIT_URL_WITH_TOKEN="https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git"
+                echo "Сформирован URL с токеном (длина: ${#GIT_URL_WITH_TOKEN})"
+              else
+                GIT_URL_WITH_TOKEN="https://github.com/Fluttrium/ReusVertus.git"
+                echo "Используем публичный URL"
+              fi
+              
               # Удаляем старый remote если есть
               echo "Удаляем старый remote..."
               git remote remove origin 2>/dev/null || echo "Remote не существовал"
               
-              # Используем URL с токеном
-              echo "Используем URL с токеном для remote"
-              
-              # Добавляем remote
-              echo "Добавляем remote origin..."
-              if git remote add origin "$GIT_URL_WITH_TOKEN" 2>&1; then
-                echo "Remote добавлен успешно"
-              else
-                echo "Ошибка при добавлении remote, пробуем set-url..."
+              # Добавляем remote с ПРЯМЫМ использованием переменной
+              echo "Добавляем remote origin с URL (длина URL: ${#GIT_URL_WITH_TOKEN})..."
+              git remote add origin "$GIT_URL_WITH_TOKEN" 2>&1 || {
+                echo "Ошибка при добавлении, пробуем set-url..."
                 git remote set-url origin "$GIT_URL_WITH_TOKEN" 2>&1 || {
-                  echo "Критическая ошибка: не удалось установить remote"
-                  echo "Проверяем текущие remotes:"
-                  git remote -v
+                  echo "КРИТИЧЕСКАЯ ОШИБКА: не удалось установить remote"
+                  echo "GIT_URL_WITH_TOKEN значение (первые 50 символов): ${GIT_URL_WITH_TOKEN:0:50}"
                   echo "GIT_URL_WITH_TOKEN длина: ${#GIT_URL_WITH_TOKEN}"
+                  echo "Текущие remotes:"
+                  git remote -v
                   exit 1
                 }
-              fi
+              }
+              
+              echo "Remote добавлен, проверяем..."
+              git remote -v
               
               # Проверяем, что remote добавлен правильно через git remote -v
               echo "Проверяем remote через git remote -v:"
