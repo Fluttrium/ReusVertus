@@ -96,19 +96,15 @@ jobs:
               exit 1
             fi
             
-            # Проверяем содержимое .env файла (первые 50 символов для безопасности)
-            ENV_VALUE=\$(grep "^DATABASE_URL=" .env | cut -d'=' -f2- | head -c 50)
-            if ! echo "\$ENV_VALUE" | grep -q "^postgresql://"; then
+            # Проверяем содержимое .env файла
+            DB_CHECK=$(grep "^DATABASE_URL=" .env | cut -d'=' -f2- | head -c 20)
+            if ! echo "$DB_CHECK" | grep -q "postgresql://"; then
               echo "ERROR: DATABASE_URL in .env file is invalid!" >&2
-              echo "First 50 chars: [\$ENV_VALUE]" >&2
-              echo "Full line: [\$(grep '^DATABASE_URL=' .env)]" >&2
+              echo "First 20 chars of DATABASE_URL: $DB_CHECK" >&2
               exit 1
             fi
             
             echo "DATABASE_URL is set correctly in .env file"
-            
-            # Показываем первые 50 символов для проверки (безопасно)
-            echo "DATABASE_URL starts with: \$(grep '^DATABASE_URL=' .env | cut -d'=' -f2- | head -c 50)"
             
             # Убеждаемся, что DATABASE_URL экспортирован в окружение для docker-compose
             export DATABASE_URL
