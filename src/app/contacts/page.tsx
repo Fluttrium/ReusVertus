@@ -22,8 +22,8 @@ export default function ContactsPage() {
             <div className="space-y-3">
               <p>
                 <span className="font-semibold">Email:</span><br />
-                <a href="mailto:info@reusvertes.com" className="underline hover:opacity-70 transition-opacity">
-                  info@reusvertes.com
+                <a href="mailto:rues.vertes11@gmail.com" className="underline hover:opacity-70 transition-opacity">
+                  rues.vertes11@gmail.com
                 </a>
               </p>
               <p>
@@ -43,8 +43,8 @@ export default function ContactsPage() {
             <div className="space-y-3">
               <p>
                 <span className="font-semibold">Email:</span><br />
-                <a href="mailto:press@reusvertes.com" className="underline hover:opacity-70 transition-opacity">
-                  press@reusvertes.com
+                <a href="mailto:rues.vertes11@gmail.com" className="underline hover:opacity-70 transition-opacity">
+                  rues.vertes11@gmail.com
                 </a>
               </p>
             </div>
@@ -58,8 +58,8 @@ export default function ContactsPage() {
             <div className="space-y-3">
               <p>
                 <span className="font-semibold">Email:</span><br />
-                <a href="mailto:wholesale@reusvertes.com" className="underline hover:opacity-70 transition-opacity">
-                  wholesale@reusvertes.com
+                <a href="mailto:rues.vertes11@gmail.com" className="underline hover:opacity-70 transition-opacity">
+                  rues.vertes11@gmail.com
                 </a>
               </p>
             </div>
@@ -73,8 +73,8 @@ export default function ContactsPage() {
             <div className="space-y-3">
               <p>
                 <span className="font-semibold">Email:</span><br />
-                <a href="mailto:collab@reusvertes.com" className="underline hover:opacity-70 transition-opacity">
-                  collab@reusvertes.com
+                <a href="mailto:rues.vertes11@gmail.com" className="underline hover:opacity-70 transition-opacity">
+                  rues.vertes11@gmail.com
                 </a>
               </p>
             </div>
@@ -86,11 +86,8 @@ export default function ContactsPage() {
         <section className="space-y-6">
           <h2 className="text-2xl uppercase border-b border-black/20 pb-2">Офис</h2>
           <div className="space-y-2 leading-relaxed">
-            <p className="font-semibold">Reus Vertes</p>
+            <p className="font-semibold">Rues Vertes</p>
             <p>Москва, Россия</p>
-            <p className="text-sm opacity-70">
-              Точный адрес сообщается по запросу
-            </p>
           </div>
         </section>
 
@@ -99,25 +96,18 @@ export default function ContactsPage() {
           <h2 className="text-2xl uppercase border-b border-black/20 pb-2">Социальные сети</h2>
           <div className="flex flex-wrap gap-6 text-lg">
             <Link
-              href="https://instagram.com/reusvertes"
+              href="https://www.instagram.com/ruesvertes?igsh=MTdreXY4b2Z4NWpqbw=="
               className="uppercase underline hover:opacity-70 transition-opacity"
               target="_blank"
             >
               Instagram
             </Link>
             <Link
-              href="https://t.me/reusvertes"
+              href="https://t.me/ruesvertes"
               className="uppercase underline hover:opacity-70 transition-opacity"
               target="_blank"
             >
               Telegram
-            </Link>
-            <Link
-              href="https://vk.com/reusvertes"
-              className="uppercase underline hover:opacity-70 transition-opacity"
-              target="_blank"
-            >
-              VK
             </Link>
           </div>
         </section>

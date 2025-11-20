@@ -40,25 +40,18 @@ export default function Footer() {
             {/* Соцсети */}
             <div className="flex gap-4 text-sm uppercase pt-4 border-t border-white/20">
                 <Link
-                href="https://instagram.com/reusvertes"
+                href="https://www.instagram.com/ruesvertes?igsh=MTdreXY4b2Z4NWpqbw=="
                 target="_blank"
                 className="hover:opacity-70 transition-opacity"
               >
                 Instagram
                 </Link>
               <Link
-                href="https://t.me/reusvertes"
+                href="https://t.me/ruesvertes"
                 target="_blank"
                 className="hover:opacity-70 transition-opacity"
               >
                 Telegram
-                </Link>
-              <Link
-                href="https://vk.com/reusvertes"
-                target="_blank"
-                className="hover:opacity-70 transition-opacity"
-              >
-                VK
                 </Link>
               </div>
 
@@ -111,26 +104,19 @@ export default function Footer() {
           {/* Соцсети */}
           <div className="flex gap-4 text-sm uppercase">
             <Link
-              href="https://instagram.com/reusvertes"
+              href="https://www.instagram.com/ruesvertes?igsh=MTdreXY4b2Z4NWpqbw=="
               target="_blank"
               className="hover:opacity-70 transition-opacity"
             >
               Instagram
             </Link>
             <Link
-              href="https://t.me/reusvertes"
+              href="https://t.me/ruesvertes"
               target="_blank"
               className="hover:opacity-70 transition-opacity"
             >
               Telegram
             </Link>
-            <Link
-              href="https://vk.com/reusvertes"
-              target="_blank"
-              className="hover:opacity-70 transition-opacity"
-            >
-              VK
-                </Link>
               </div>
             </div>
 

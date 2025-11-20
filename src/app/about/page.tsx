@@ -109,15 +109,15 @@ export default function AboutPage() {
             <div className="space-y-4">
               <div className="relative aspect-square bg-bg-2 rounded-lg overflow-hidden">
                 <Image
-                  src="/shirt/shirt1.png"
+                  src="/about/IMG_4219.JPEG"
                   alt="Команда"
                   fill
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <div>
-                <h3 className="text-xl font-semibold uppercase">Алексей Иванов</h3>
-                <p className="text-sm opacity-70 uppercase">Creative Director</p>
+                <h3 className="text-xl font-semibold uppercase">Элеонора Григорян</h3>
+                <p className="text-sm opacity-70 uppercase">CEO</p>
               </div>
             </div>
             <div className="space-y-4">
@@ -130,8 +130,8 @@ export default function AboutPage() {
                 />
               </div>
               <div>
-                <h3 className="text-xl font-semibold uppercase">Мария Петрова</h3>
-                <p className="text-sm opacity-70 uppercase">Lead Designer</p>
+                <h3 className="text-xl font-semibold uppercase">Юлия Вирачева</h3>
+                <p className="text-sm opacity-70 uppercase">Producer</p>
               </div>
             </div>
             <div className="space-y-4">
