@@ -127,16 +127,32 @@ jobs:
               echo "Обновляем код из репозитория..."
               
               # Удаляем старый remote если есть
-              git remote remove origin 2>/dev/null || true
+              echo "Удаляем старый remote..."
+              git remote remove origin 2>/dev/null || echo "Remote не существовал"
               
               # Добавляем remote с захардкоженным URL
               echo "Добавляем remote origin..."
-              git remote add origin "https://github.com/Fluttrium/ReusVertus.git"
+              if git remote add origin "https://github.com/Fluttrium/ReusVertus.git" 2>&1; then
+                echo "Remote добавлен успешно"
+              else
+                echo "Ошибка при добавлении remote, пробуем set-url..."
+                git remote set-url origin "https://github.com/Fluttrium/ReusVertus.git" 2>&1 || {
+                  echo "Критическая ошибка: не удалось установить remote"
+                  echo "Проверяем текущие remotes:"
+                  git remote -v
+                  exit 1
+                }
+              fi
               
               # Проверяем, что remote добавлен правильно
-              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-              if [ -z "$REMOTE_URL" ]; then
-                echo "Ошибка: не удалось установить remote URL"
+              echo "Проверяем remote URL..."
+              REMOTE_URL=$(git remote get-url origin 2>&1)
+              echo "Remote URL результат: $REMOTE_URL"
+              
+              if [ -z "$REMOTE_URL" ] || [[ "$REMOTE_URL" == *"error"* ]] || [[ "$REMOTE_URL" == *"fatal"* ]]; then
+                echo "Ошибка: remote URL не установлен или ошибка"
+                echo "Список всех remotes:"
+                git remote -v
                 exit 1
               fi
               
