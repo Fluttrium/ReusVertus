@@ -99,28 +99,6 @@ jobs:
             $DOCKER_COMPOSE_CMD ps
           ENDSSH
       
-      - name: Setup Nginx
-        env:
-          VPS_HOST: 92.118.114.147
-          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
-          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
-        run: |
-          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
-            # Копируем конфигурацию nginx из репозитория
-            if [ -f $DEPLOY_PATH/nginx.conf ]; then
-              sudo cp $DEPLOY_PATH/nginx.conf /etc/nginx/sites-available/ruesvertes.ru
-            fi
-            
-            # Создаем симлинк, если его нет
-            sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
-            
-            # Проверяем конфигурацию nginx
-            sudo nginx -t
-            
-            # Перезагружаем nginx
-            sudo systemctl reload nginx || sudo service nginx reload
-          ENDSSH
       
       - name: Cleanup
         if: always()
