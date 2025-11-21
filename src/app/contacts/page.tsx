@@ -26,12 +26,6 @@ export default function ContactsPage() {
                   rues.vertes11@gmail.com
                 </a>
               </p>
-              <p>
-                <span className="font-semibold">Телефон:</span><br />
-                <a href="tel:+7XXXXXXXXXX" className="underline hover:opacity-70 transition-opacity">
-                  +7 (XXX) XXX-XX-XX
-                </a>
-              </p>
             </div>
           </div>
 
