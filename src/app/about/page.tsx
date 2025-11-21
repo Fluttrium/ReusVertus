@@ -123,17 +123,23 @@ export default function AboutPage() {
             </div>
             <div className="space-y-4">
               <div className="relative aspect-square bg-bg-2 rounded-lg overflow-hidden">
-                <Image
-                  src="/julia2.png"
-                  alt="Команда"
-                  fill
-                  priority
-                  className="object-cover hover:scale-105 transition-transform duration-300"
-                />
+                <div className="absolute inset-0" style={{ 
+                  width: '180%',
+                  left: '-80%'
+                }}>
+                  <Image
+                    src="/julia2.png"
+                    alt="Команда"
+                    fill
+                    priority
+                    className="object-cover hover:scale-105 transition-transform duration-300"
+                    style={{ objectPosition: 'right 25%' }}
+                  />
+                </div>
               </div>
               <div>
                 <h3 className="text-xl font-semibold uppercase">Юлия Вирачева</h3>
-                <p className="text-sm opacity-70 uppercase">Producer</p>
+                <p className="text-sm opacity-70 uppercase">Creative Producer</p>
               </div>
             </div>
           </div>

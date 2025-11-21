@@ -305,14 +305,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">
             <div className="space-y-4">
               {/* Главное фото */}
-              <div className="relative w-full aspect-square bg-bg-2 rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="relative w-full bg-bg-2 rounded-lg overflow-hidden flex items-center justify-center" style={{ minHeight: '400px', maxHeight: '80vh' }}>
                 {activeImage ? (
                   <Image
                     src={activeImage}
                     alt={product?.name ? `${product.name} — фото ${selectedImageIndex + 1}` : `Фото товара ${selectedImageIndex + 1}`}
-                    fill
+                    width={800}
+                    height={800}
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
+                    className="object-contain w-full h-auto"
                     priority
                   />
                 ) : (

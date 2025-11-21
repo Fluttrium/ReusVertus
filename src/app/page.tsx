@@ -29,7 +29,7 @@ export default function Home() {
           >
             VRT SHIRT 001
           </h1>
-          <h2
+          <h3
             className="text-sm md:text-2xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.8]"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 600, color: 'var(--bg-1)' }}
           >
@@ -45,7 +45,7 @@ export default function Home() {
               <br />
               Пространство для тех, кто творит и вдохновляет
             </span>
-          </h2>
+          </h3>
           <Link
             href={`/product/${featuredProductId}`}
             className="button-link px-10 py-5 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.4rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-3 md:translate-y-0 md:mt-32 whitespace-nowrap"
