@@ -15,14 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Check required secrets
-        run: |
-          if [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
-            echo "❌ Ошибка: VPS_SSH_KEY не настроен в GitHub Secrets"
-            echo "Пожалуйста, добавьте секрет VPS_SSH_KEY в Settings → Secrets and variables → Actions"
-            exit 1
-          fi
-          echo "✅ Все обязательные секреты настроены"
+    
       
       - name: Setup SSH
         env:
@@ -32,41 +25,21 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
-          
-          # Проверяем формат ключа
-          echo "Проверяем SSH ключ..."
-          if ! ssh-keygen -l -f ~/.ssh/deploy_key &>/dev/null; then
-            echo "❌ Ошибка: SSH ключ имеет неправильный формат"
-            echo "Первые несколько символов ключа:"
-            head -c 50 ~/.ssh/deploy_key
-            exit 1
-          fi
-          
-          # Пробуем подключиться для проверки
-          echo "Проверяем подключение к VPS..."
-          ssh -i ~/.ssh/deploy_key -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o BatchMode=yes root@$VPS_HOST "echo 'SSH подключение успешно!'" || {
-            echo "❌ Не удалось подключиться к VPS"
-            echo "Проверьте:"
-            echo "1. Публичный ключ добавлен на VPS в ~/.ssh/authorized_keys"
-            echo "2. Правильный приватный ключ в GitHub Secrets (VPS_SSH_KEY)"
-            echo "3. Правильный пользователь (по умолчанию: root)"
-            exit 1
-          }
       
       - name: Deploy to VPS
         env:
           VPS_HOST: 92.118.114.147
-          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
-          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
-          GIT_REPO: ${{ secrets.GIT_REPO || 'https://github.com/Fluttrium/ReusVertus.git' }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
+          VPS_USER: 'root'
+          VPS_PORT: '22'
+          DEPLOY_PATH: '/var/www/reusvertus' 
+          GIT_REPO: 'https://github.com/Fluttrium/ReusVertus.git' 
         run: |
-          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << ENDSSH
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
+            set -e
+            
             # Захардкоженные значения
             DEPLOY_PATH="/var/www/reusvertus"
             GIT_REPO="https://github.com/Fluttrium/ReusVertus.git"
-            GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN || github.token }}"
             
             # Создаем директорию, если её нет
             mkdir -p "$DEPLOY_PATH"
@@ -74,108 +47,29 @@ jobs:
             
             echo "DEPLOY_PATH: $DEPLOY_PATH"
             echo "GIT_REPO: $GIT_REPO"
-            echo "GITHUB_TOKEN установлен: $([ -n "$GITHUB_TOKEN" ] && echo 'да' || echo 'нет')"
+            echo "Используем публичный репозиторий (без токена)"
             
-            # Формируем URL с токеном напрямую
-            if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "github.token" ]; then
-              echo "Используем GITHUB_TOKEN для аутентификации"
-              # Захардкоженный URL с токеном
-              GIT_URL="https://${GITHUB_TOKEN}@github.com/Fluttrium/ReusVertus.git"
-              
-              # Настраиваем git для использования токена без запроса пароля
-              git config --global credential.helper store
-              echo "https://${GITHUB_TOKEN}@github.com" > ~/.git-credentials
-              chmod 600 ~/.git-credentials
-              echo "Git credentials настроены"
-            else
-              echo "GITHUB_TOKEN не установлен, используем публичный доступ"
-              GIT_URL="https://github.com/Fluttrium/ReusVertus.git"
-            fi
+            # Для публичного репозитория используем прямой URL
+            GIT_URL="$GIT_REPO"
             
             # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
+            export GIT_ASKPASS=echo
             
-            # Проверяем, что GIT_URL установлен
-            if [ -z "$GIT_URL" ]; then
-              echo "Ошибка: GIT_URL пустой после установки!"
-              exit 1
-            fi
+            # Настраиваем git локально (без --global, чтобы избежать проблем с правами)
+            git config user.email "deploy@github-actions" || true
+            git config user.name "GitHub Actions" || true
             
-            echo "Итоговый GIT_URL установлен (длина: ${#GIT_URL})"
-            
-            # Инициализируем git репозиторий, если его нет
+            # Инициализируем или обновляем git репозиторий
             if [ ! -d .git ]; then
               echo "Инициализируем git репозиторий..."
-              git init
-              git remote add origin "$GIT_URL" || git remote set-url origin "$GIT_URL"
-              
-              # Настраиваем git для неинтерактивного режима
-              git config --global user.email "deploy@github-actions"
-              git config --global user.name "GitHub Actions"
-              
-              # Fetch с правильной настройкой
-              GIT_TERMINAL_PROMPT=0 git fetch origin || {
-                echo "Ошибка при fetch. Проверяем доступность репозитория..."
-                # Пробуем без токена (если публичный)
-                if [[ "$GIT_REPO" == https://* ]]; then
-                  git remote set-url origin "$GIT_REPO"
-                  GIT_TERMINAL_PROMPT=0 git fetch origin || exit 1
-                else
-                  exit 1
-                fi
-              }
-              
-              # Определяем основную ветку
-              if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
-                git checkout -b main origin/main
-              elif git ls-remote --heads origin master 2>/dev/null | grep -q master; then
-                git checkout -b master origin/master
-              else
-                echo "Ошибка: не найдена ветка main или master"
-                echo "Доступные ветки:"
-                git ls-remote --heads origin
-                exit 1
-              fi
+              rm -rf * .* 2>/dev/null || true
+              git clone "$GIT_REPO" .
             else
               echo "Обновляем код из репозитория..."
               
-              # Проверяем GIT_URL перед использованием
-              echo "Используем GIT_URL: ${GIT_URL%%@*}" # Показываем только часть до @
-              
-              # Удаляем старый remote если есть
-              git remote remove origin 2>/dev/null || true
-              
-              # Добавляем remote с правильным URL
-              echo "Добавляем remote origin с URL..."
-              git remote add origin "$GIT_URL"
-              
-              # Проверяем, что remote добавлен правильно
-              REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
-              if [ -z "$REMOTE_URL" ]; then
-                echo "Ошибка: не удалось установить remote URL"
-                echo "GIT_URL значение: ${GIT_URL:0:50}..."
-                exit 1
-              fi
-              
-              echo "Remote URL установлен успешно"
-              
-              # Настраиваем git для неинтерактивного режима
-              git config --global user.email "deploy@github-actions"
-              git config --global user.name "GitHub Actions"
-              
-              # Обновляем код
-              echo "Выполняем fetch..."
-              GIT_TERMINAL_PROMPT=0 git fetch origin || {
-                echo "Ошибка при fetch. Проверяем remote..."
-                git remote -v
-                echo "Пробуем переустановить remote..."
-                git remote remove origin 2>/dev/null || true
-                git remote add origin "$GIT_URL"
-                GIT_TERMINAL_PROMPT=0 git fetch origin || exit 1
-              }
-              
-              # Определяем текущую ветку
-              CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+              # Обновляем remote URL
+              git remote set-url origin "$GIT_REPO" 2>/dev/null || git remote add origin "$GIT_REPO"
               
               # Определяем какую ветку использовать
               if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
@@ -191,14 +85,9 @@ jobs:
                 exit 1
               fi
               
-              # Переключаемся на нужную ветку или создаем её
-              if [ -n "$CURRENT_BRANCH" ] && [ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]; then
-                git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" 2>/dev/null || git checkout "$TARGET_BRANCH"
-              elif [ -z "$CURRENT_BRANCH" ]; then
-                git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
-              fi
-              
-              # Обновляем код
+              # Fetch и обновление
+              git fetch origin
+              git checkout "$TARGET_BRANCH" 2>/dev/null || git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
               git reset --hard "origin/$TARGET_BRANCH"
               git clean -fd
             fi
@@ -229,60 +118,6 @@ jobs:
             
             # Проверяем статус
             $DOCKER_COMPOSE_CMD ps
-          ENDSSH
-      
-      - name: Setup SSL Certificate (только при первом деплое)
-        env:
-          VPS_HOST: 92.118.114.147
-          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
-          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
-          DOMAIN: ${{ secrets.DOMAIN || 'ruesvertes.ru' }}
-          EMAIL: ${{ secrets.EMAIL }}
-        run: |
-          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
-            # Проверяем, существует ли сертификат
-            if [ ! -f /etc/letsencrypt/live/$DOMAIN/fullchain.pem ]; then
-              echo "SSL сертификат не найден, настраиваем..."
-              
-              # Устанавливаем certbot, если его нет
-              if ! command -v certbot &> /dev/null; then
-                sudo apt-get update -qq
-                sudo apt-get install -y certbot python3-certbot-nginx
-              fi
-              
-              # Временно настраиваем nginx для HTTP (для верификации Let's Encrypt)
-              sudo tee /etc/nginx/sites-available/ruesvertes.ru > /dev/null << 'NGINXCONF'
-            server {
-                listen 80;
-                server_name ruesvertes.ru www.ruesvertes.ru;
-                
-                location / {
-                    proxy_pass http://localhost:3300;
-                    proxy_http_version 1.1;
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                }
-            }
-            NGINXCONF
-              sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
-              sudo rm -f /etc/nginx/sites-enabled/default
-              sudo nginx -t && sudo systemctl reload nginx
-              
-              # Получаем SSL сертификат
-              if [ -n "$EMAIL" ]; then
-                sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
-              else
-                sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --redirect
-              fi
-              
-              echo "SSL сертификат успешно установлен!"
-            else
-              echo "SSL сертификат уже существует, пропускаем настройку."
-              echo "Certbot автоматически обновит сертификат при необходимости."
-            fi
           ENDSSH
       
       - name: Setup Nginx
