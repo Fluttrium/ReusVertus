@@ -35,79 +35,41 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
             set -e
             
-            # Захардкоженные значения
             DEPLOY_PATH="/var/www/reusvertus"
             GIT_REPO="https://github.com/Fluttrium/ReusVertus.git"
             
-            # Создаем директорию, если её нет
-            mkdir -p "$DEPLOY_PATH"
+            echo "Проверка дискового пространства..."
+            df -h / | tail -1
+            
+            echo "Очистка неиспользуемых Docker ресурсов..."
+            docker system prune -af --volumes || true
+            
+            echo "Очистка старых Docker образов..."
+            docker image prune -af || true
+            
+            echo "Проверка дискового пространства после очистки..."
+            df -h / | tail -1
+            
+            # Останавливаем контейнеры перед обновлением
+            cd "$DEPLOY_PATH" 2>/dev/null || true
+            if [ -f docker-compose.yml ]; then
+              docker compose down || docker-compose down || true
+            fi
+            
+            # Удаляем старую директорию полностью
+            echo "Удаление старой директории..."
+            cd /var/www
+            rm -rf reusvertus
+            
+            # Клонируем репозиторий заново
+            echo "Клонирование репозитория..."
+            git clone "$GIT_REPO" -b main reusvertus
+            
             cd "$DEPLOY_PATH"
             
-            echo "DEPLOY_PATH: $DEPLOY_PATH"
-            echo "GIT_REPO: $GIT_REPO"
-            echo "Используем публичный репозиторий (без токена)"
-            
-            # Для публичного репозитория используем прямой URL
-            GIT_URL="$GIT_REPO"
-            
-            # Отключаем интерактивные запросы
-            export GIT_TERMINAL_PROMPT=0
-            export GIT_ASKPASS=echo
-            
-            # Инициализируем или обновляем git репозиторий
-            if [ ! -d .git ]; then
-              echo "Инициализируем git репозиторий..."
-              rm -rf * .* 2>/dev/null || true
-              git clone "$GIT_REPO" -b main .
-            else
-              echo "Обновляем код из репозитория..."
-              
-              # Удаляем все lock файлы git
-              find .git -name "*.lock" -type f -delete 2>/dev/null || true
-              rm -f .git/config.lock .git/index.lock .git/HEAD.lock 2>/dev/null || true
-              
-              # Пробуем обновить remote, если не получается - пересоздаем репозиторий
-              UPDATE_FAILED=false
-              
-              # Пробуем обновить remote URL
-              for i in 1 2 3; do
-                rm -f .git/config.lock 2>/dev/null || true
-                sleep 0.5
-                if git remote get-url origin >/dev/null 2>&1; then
-                  if git remote set-url origin "$GIT_REPO" 2>/dev/null; then
-                    UPDATE_FAILED=false
-                    break
-                  fi
-                else
-                  if git remote add origin "$GIT_REPO" 2>/dev/null; then
-                    UPDATE_FAILED=false
-                    break
-                  fi
-                fi
-                UPDATE_FAILED=true
-              done
-              
-              # Если не удалось обновить, пересоздаем репозиторий
-              if [ "$UPDATE_FAILED" = true ] || ! git remote get-url origin >/dev/null 2>&1; then
-                echo "Не удалось обновить remote, пересоздаем репозиторий..."
-                cd "$DEPLOY_PATH/.."
-                rm -rf "$DEPLOY_PATH"
-                mkdir -p "$DEPLOY_PATH"
-                cd "$DEPLOY_PATH"
-                git clone "$GIT_REPO" -b main .
-              else
-                # Настраиваем git локально
-                rm -f .git/config.lock 2>/dev/null || true
-                git config user.email "deploy@github-actions" || true
-                git config user.name "GitHub Actions" || true
-                
-                # Fetch и обновление ветки main
-                git fetch origin main
-                git checkout main 2>/dev/null || git checkout -b main origin/main
-                git reset --hard origin/main
-                git clean -fd
-              fi
-            fi
+            # Настраиваем git
+            git config user.email "deploy@github-actions" || true
+            git config user.name "GitHub Actions" || true
             
             # Проверяем наличие Docker Compose
             if command -v docker-compose &> /dev/null; then
