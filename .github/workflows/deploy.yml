@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
-      - update-faq-contacts-product
 
 jobs:
   deploy:
@@ -56,39 +54,32 @@ jobs:
             export GIT_TERMINAL_PROMPT=0
             export GIT_ASKPASS=echo
             
-            # Настраиваем git локально (без --global, чтобы избежать проблем с правами)
-            git config user.email "deploy@github-actions" || true
-            git config user.name "GitHub Actions" || true
-            
             # Инициализируем или обновляем git репозиторий
             if [ ! -d .git ]; then
               echo "Инициализируем git репозиторий..."
               rm -rf * .* 2>/dev/null || true
-              git clone "$GIT_REPO" .
+              git clone "$GIT_REPO" -b main .
             else
               echo "Обновляем код из репозитория..."
               
-              # Обновляем remote URL
-              git remote set-url origin "$GIT_REPO" 2>/dev/null || git remote add origin "$GIT_REPO"
+              # Удаляем lock файл если он существует
+              rm -f .git/config.lock 2>/dev/null || true
               
-              # Определяем какую ветку использовать
-              if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
-                TARGET_BRANCH="main"
-              elif git ls-remote --heads origin master 2>/dev/null | grep -q master; then
-                TARGET_BRANCH="master"
-              elif git ls-remote --heads origin update-faq-contacts-product 2>/dev/null | grep -q update-faq-contacts-product; then
-                TARGET_BRANCH="update-faq-contacts-product"
+              # Обновляем remote URL (используем set-url, чтобы избежать ошибки если уже существует)
+              if git remote get-url origin >/dev/null 2>&1; then
+                git remote set-url origin "$GIT_REPO"
               else
-                echo "Ошибка: не найдена ветка main, master или update-faq-contacts-product"
-                echo "Доступные ветки:"
-                git ls-remote --heads origin
-                exit 1
+                git remote add origin "$GIT_REPO"
               fi
               
-              # Fetch и обновление
-              git fetch origin
-              git checkout "$TARGET_BRANCH" 2>/dev/null || git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
-              git reset --hard "origin/$TARGET_BRANCH"
+              # Настраиваем git локально (после установки remote)
+              git config user.email "deploy@github-actions" || true
+              git config user.name "GitHub Actions" || true
+              
+              # Fetch и обновление ветки main
+              git fetch origin main
+              git checkout main 2>/dev/null || git checkout -b main origin/main
+              git reset --hard origin/main
               git clean -fd
             fi
             
@@ -135,9 +126,6 @@ jobs:
             
             # Создаем симлинк, если его нет
             sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
-            
-            # Удаляем дефолтную конфигурацию nginx, если она существует
-            sudo rm -f /etc/nginx/sites-enabled/default
             
             # Проверяем конфигурацию nginx
             sudo nginx -t
