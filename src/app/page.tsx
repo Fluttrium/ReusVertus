@@ -30,7 +30,7 @@ export default function Home() {
             VRT SHIRT 001
           </h1>
           <h2
-            className="text-lg md:text-2xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.8]"
+            className="text-sm md:text-2xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.8]"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 600, color: 'var(--bg-1)' }}
           >
             Сообщество дизайнеров и молодых предпринимателей с уникальным мировозрением,

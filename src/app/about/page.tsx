@@ -112,6 +112,7 @@ export default function AboutPage() {
                   src="/about/IMG_4219.JPEG"
                   alt="Команда"
                   fill
+                  priority
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
               </div>
@@ -123,29 +124,16 @@ export default function AboutPage() {
             <div className="space-y-4">
               <div className="relative aspect-square bg-bg-2 rounded-lg overflow-hidden">
                 <Image
-                  src="/shirt/shirt2.png"
+                  src="/julia2.png"
                   alt="Команда"
                   fill
+                  priority
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <div>
                 <h3 className="text-xl font-semibold uppercase">Юлия Вирачева</h3>
                 <p className="text-sm opacity-70 uppercase">Producer</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="relative aspect-square bg-bg-2 rounded-lg overflow-hidden">
-                <Image
-                  src="/shirt/shirt1.png"
-                  alt="Команда"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold uppercase">Дмитрий Сидоров</h3>
-                <p className="text-sm opacity-70 uppercase">Production Manager</p>
               </div>
             </div>
           </div>
