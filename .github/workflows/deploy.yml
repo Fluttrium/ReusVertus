@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
 
 jobs:
   deploy:
@@ -13,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+    
       
       - name: Setup SSH
         env:
@@ -26,170 +27,115 @@ jobs:
       - name: Deploy to VPS
         env:
           VPS_HOST: 92.118.114.147
-          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
-          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus' }}
+          VPS_USER: 'root'
+          VPS_PORT: '22'
+          DEPLOY_PATH: '/var/www/reusvertus' 
+          GIT_REPO: 'https://github.com/Fluttrium/ReusVertus.git' 
         run: |
           ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
             set -e
             
-            # Создаем директорию проекта
-            mkdir -p /var/www/reusvertus
-            cd /var/www/reusvertus || exit 1
+            # Захардкоженные значения
+            DEPLOY_PATH="/var/www/reusvertus"
+            GIT_REPO="https://github.com/Fluttrium/ReusVertus.git"
             
-            # Настраиваем Git
+            # Создаем директорию, если её нет
+            mkdir -p "$DEPLOY_PATH"
+            cd "$DEPLOY_PATH"
+            
+            echo "DEPLOY_PATH: $DEPLOY_PATH"
+            echo "GIT_REPO: $GIT_REPO"
+            echo "Используем публичный репозиторий (без токена)"
+            
+            # Для публичного репозитория используем прямой URL
+            GIT_URL="$GIT_REPO"
+            
+            # Отключаем интерактивные запросы
             export GIT_TERMINAL_PROMPT=0
-            git config --global user.email "deploy@github-actions" || true
-            git config --global user.name "GitHub Actions" || true
+            export GIT_ASKPASS=echo
             
-            # Клонируем или обновляем репозиторий
+            # Инициализируем или обновляем git репозиторий
             if [ ! -d .git ]; then
-              echo "Инициализация нового репозитория..."
-              rm -rf /var/www/reusvertus/* /var/www/reusvertus/.* 2>/dev/null || true
-              git clone https://github.com/Fluttrium/ReusVertus.git /tmp/reusvertus-tmp || exit 1
-              mv /tmp/reusvertus-tmp/* /tmp/reusvertus-tmp/.* /var/www/reusvertus/ 2>/dev/null || true
-              rm -rf /tmp/reusvertus-tmp
-              cd /var/www/reusvertus
+              echo "Инициализируем git репозиторий..."
+              rm -rf * .* 2>/dev/null || true
+              git clone "$GIT_REPO" -b main .
             else
-              echo "Обновление существующего репозитория..."
-              git remote remove origin 2>/dev/null || true
-              git remote add origin https://github.com/Fluttrium/ReusVertus.git 2>/dev/null || true
-              git fetch origin || exit 1
-              if git ls-remote --heads origin main 2>/dev/null | grep -q main; then
-                git checkout main 2>/dev/null || git checkout -b main origin/main
-                git reset --hard origin/main || exit 1
-              elif git ls-remote --heads origin master 2>/dev/null | grep -q master; then
-                git checkout master 2>/dev/null || git checkout -b master origin/master
-                git reset --hard origin/master || exit 1
+              echo "Обновляем код из репозитория..."
+              
+              # Удаляем lock файл если он существует
+              rm -f .git/config.lock 2>/dev/null || true
+              
+              # Обновляем remote URL (используем set-url, чтобы избежать ошибки если уже существует)
+              if git remote get-url origin >/dev/null 2>&1; then
+                git remote set-url origin "$GIT_REPO"
               else
-                echo "ERROR: Не найдена ветка main или master" >&2
-                exit 1
+                git remote add origin "$GIT_REPO"
               fi
-              git clean -fd || true
+              
+              # Настраиваем git локально (после установки remote)
+              git config user.email "deploy@github-actions" || true
+              git config user.name "GitHub Actions" || true
+              
+              # Fetch и обновление ветки main
+              git fetch origin main
+              git checkout main 2>/dev/null || git checkout -b main origin/main
+              git reset --hard origin/main
+              git clean -fd
             fi
             
-            # Устанавливаем Docker Compose
-            echo "Проверка Docker Compose..."
-            if docker compose version &> /dev/null 2>&1; then
-              DOCKER_COMPOSE_CMD="docker compose"
-              echo "Используется: docker compose"
-            elif command -v docker-compose &> /dev/null; then
+            # Проверяем наличие Docker Compose
+            if command -v docker-compose &> /dev/null; then
               DOCKER_COMPOSE_CMD="docker-compose"
-              echo "Используется: docker-compose"
+            elif docker compose version &> /dev/null; then
+              DOCKER_COMPOSE_CMD="docker compose"
             else
-              echo "Установка Docker Compose..."
+              echo "Ошибка: Docker Compose не установлен"
+              echo "Устанавливаем Docker Compose..."
               sudo apt-get update -qq
-              # Пробуем установить docker-compose-plugin (новый способ)
-              if sudo apt-get install -y docker-compose-plugin 2>/dev/null; then
-                DOCKER_COMPOSE_CMD="docker compose"
-                echo "Установлен: docker compose (plugin)"
-              # Пробуем установить старый docker-compose
-              elif sudo apt-get install -y docker-compose 2>/dev/null; then
+              sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose
+              if command -v docker-compose &> /dev/null; then
                 DOCKER_COMPOSE_CMD="docker-compose"
-                echo "Установлен: docker-compose (standalone)"
               else
-                echo "ERROR: Не удалось установить Docker Compose" >&2
-                exit 1
+                DOCKER_COMPOSE_CMD="docker compose"
               fi
             fi
             
-            # Проверяем, что команда работает
-            $DOCKER_COMPOSE_CMD version || (echo "ERROR: Docker Compose не работает" >&2 && exit 1)
+            echo "Используем команду: $DOCKER_COMPOSE_CMD"
             
-            # Настраиваем .env файл
-            if [ ! -f .env ]; then
-              touch .env
-            fi
-            
-            # Устанавливаем DATABASE_URL
-            DATABASE_URL="postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus"
-            export DATABASE_URL
-            
-            # Удаляем старую строку DATABASE_URL если она есть
-            sed -i.bak '/^DATABASE_URL=/d' .env 2>/dev/null || grep -v "^DATABASE_URL" .env > .env.tmp && mv .env.tmp .env 2>/dev/null || true
-            # Добавляем новую строку DATABASE_URL
-            echo "DATABASE_URL=postgresql://gen_user:std%21Y8XUk-RF%3BV@185.211.170.182:5432/default_db?schema=reusvertus" >> .env
-            
-            # Проверяем, что DATABASE_URL записан в .env
-            if ! grep -q "^DATABASE_URL=" .env; then
-              echo "ERROR: Failed to write DATABASE_URL to .env file!" >&2
-              exit 1
-            fi
-            
-            # Проверяем содержимое .env файла
-            DB_CHECK=$(grep "^DATABASE_URL=" .env | cut -d'=' -f2- | head -c 20)
-            if ! echo "$DB_CHECK" | grep -q "postgresql://"; then
-              echo "ERROR: DATABASE_URL in .env file is invalid!" >&2
-              echo "First 20 chars of DATABASE_URL: $DB_CHECK" >&2
-              exit 1
-            fi
-            
-            echo "DATABASE_URL is set correctly in .env file"
-            
-            # Настраиваем Nginx
-            echo "Настройка Nginx..."
-            if ! command -v nginx &> /dev/null; then
-              echo "Установка Nginx..."
-              sudo apt-get update -qq
-              sudo apt-get install -y nginx || (echo "ERROR: Не удалось установить nginx" >&2 && exit 1)
-            fi
-            
-            if [ -f nginx.conf ]; then
-              # Создаем директорию для ACME challenge
-              sudo mkdir -p /var/www/html
-              sudo chown -R www-data:www-data /var/www/html || sudo chown -R nginx:nginx /var/www/html || true
-              
-              # Проверяем наличие SSL сертификатов
-              if [ -f /etc/letsencrypt/live/ruesvertes.ru/fullchain.pem ]; then
-                echo "SSL сертификаты найдены. Применяем конфигурацию с HTTPS..."
-                sudo cp nginx.conf /etc/nginx/sites-available/reusvertus.conf
-              else
-                echo "SSL сертификаты не найдены. Применяем конфигурацию без HTTPS..."
-                echo "Для настройки SSL вручную выполните: sudo certbot --nginx -d ruesvertes.ru -d www.ruesvertes.ru"
-                # Создаем конфигурацию без HTTPS блока и без редиректа
-                sed '/^# HTTPS сервер$/,/^}$/d' nginx.conf | sed 's/return 301 https:/# return 301 https:/' > /tmp/nginx-no-https.conf
-                sudo cp /tmp/nginx-no-https.conf /etc/nginx/sites-available/reusvertus.conf
-              fi
-              
-              sudo ln -sf /etc/nginx/sites-available/reusvertus.conf /etc/nginx/sites-enabled/reusvertus.conf
-              sudo rm -f /etc/nginx/sites-enabled/default
-              
-              # Проверяем конфигурацию nginx
-              if sudo nginx -t; then
-                sudo systemctl reload nginx || sudo systemctl restart nginx || echo "Предупреждение: не удалось перезагрузить nginx" >&2
-                echo "Nginx конфигурация применена успешно"
-              else
-                echo "ERROR: Ошибка в конфигурации nginx. Проверьте логи." >&2
-                sudo nginx -t
-                exit 1
-              fi
-            else
-              echo "Предупреждение: nginx.conf не найден" >&2
-            fi
-            
-            # Убеждаемся, что DATABASE_URL экспортирован в окружение для docker-compose
-            export DATABASE_URL
-            
-            # Останавливаем старые контейнеры
-            echo "Остановка старых контейнеров..."
+            # Запускаем docker compose
             $DOCKER_COMPOSE_CMD down || true
+            $DOCKER_COMPOSE_CMD pull || true
+            $DOCKER_COMPOSE_CMD up -d --build
             
-            # Собираем и запускаем контейнеры
-            echo "Сборка и запуск контейнеров..."
-            $DOCKER_COMPOSE_CMD up -d --build || exit 1
+            # Проверяем статус
+            $DOCKER_COMPOSE_CMD ps
+          ENDSSH
+      
+      - name: Setup Nginx
+        env:
+          VPS_HOST: 92.118.114.147
+          VPS_USER: ${{ secrets.VPS_USER || 'root' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/var/www/reusvertus' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'ENDSSH'
+            # Копируем конфигурацию nginx из репозитория
+            if [ -f $DEPLOY_PATH/nginx.conf ]; then
+              sudo cp $DEPLOY_PATH/nginx.conf /etc/nginx/sites-available/ruesvertes.ru
+            fi
             
-            sleep 5
+            # Создаем симлинк, если его нет
+            sudo ln -sf /etc/nginx/sites-available/ruesvertes.ru /etc/nginx/sites-enabled/
             
-            # Показываем логи
-            echo "Логи приложения:"
-            $DOCKER_COMPOSE_CMD logs --tail=50 app || true
+            # Проверяем конфигурацию nginx
+            sudo nginx -t
             
-            # Проверяем статус контейнеров
-            echo "Статус контейнеров:"
-            $DOCKER_COMPOSE_CMD ps || true
+            # Перезагружаем nginx
+            sudo systemctl reload nginx || sudo service nginx reload
           ENDSSH
       
       - name: Cleanup
         if: always()
         run: |
           rm -f ~/.ssh/deploy_key
+
