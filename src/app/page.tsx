@@ -22,7 +22,7 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col items-center justify-center gap-2 sm:gap-4 md:gap-8 px-4 text-center md:translate-y-20">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-2 sm:gap-4 md:gap-8 px-4 text-center translate-y-8 md:translate-y-20">
           <h1
             className="text-white text-3xl md:text-5xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.3] whitespace-nowrap"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 700 }}
