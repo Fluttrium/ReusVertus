@@ -437,7 +437,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
 
                 {/* Таблица размеров */}
-                <details className="border border-black/10 rounded-lg w-full h-full">
+                <details className="border border-black/10 rounded-lg w-full h-[100%]">
                   <summary className="px-4 py-3 text-xs uppercase tracking-[0.2em] cursor-pointer select-none flex items-center justify-between">
                     <span>Таблица размеров</span>
                     <span className="text-[10px]">Раскрыть</span>
