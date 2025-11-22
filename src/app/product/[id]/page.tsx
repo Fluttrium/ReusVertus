@@ -302,7 +302,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* Основной блок: Фото слева, информация справа */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-14 items-start">
           {/* Левая колонка: Фото товара (закрепляется) */}
-          <div className="lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+          <div className="lg:sticky lg:top-6 lg:self-start">
             <div className="space-y-4">
               {/* Главное фото */}
               <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-bg-1 rounded-xl overflow-hidden">
@@ -437,13 +437,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
 
                 {/* Таблица размеров */}
-                <details className="border border-black/10 rounded-lg">
+                <details className="border border-black/10 rounded-lg w-full h-full">
                   <summary className="px-4 py-3 text-xs uppercase tracking-[0.2em] cursor-pointer select-none flex items-center justify-between">
                     <span>Таблица размеров</span>
                     <span className="text-[10px]">Раскрыть</span>
                   </summary>
-                  <div className="overflow-hidden">
-                    <table className="w-full text-xs uppercase">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-full text-xs uppercase">
                       <thead className="bg-black/5">
                         <tr>
                           <th className="px-4 py-3 text-left">Размер</th>

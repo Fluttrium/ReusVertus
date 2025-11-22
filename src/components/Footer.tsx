@@ -75,7 +75,6 @@ export default function Footer() {
 
             {/* Информация о компании */}
             <div className="pt-4 border-t border-white/20 text-xs opacity-70">
-              <p>© 2024 Reus Vertes. Все права защищены.</p>
               </div>
             </div>
           </div>
