@@ -72,10 +72,6 @@ export default function Footer() {
                 федерального проекта «Технологии».
               </p>
               </div>
-
-            {/* Информация о компании */}
-            <div className="pt-4 border-t border-white/20 text-xs opacity-70">
-              </div>
             </div>
           </div>
         </footer>
