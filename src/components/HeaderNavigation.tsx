@@ -329,11 +329,11 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
   if (isMobile) {
     return (
       <header
-        className={`bg-bg-4 text-[#FFF8F0] pt-4 pb-5 relative sticky top-0 z-50 ${className}`}
+        className={`bg-bg-4 text-[#FFF8F0] pt-4 pb-5 relative sticky top-0 z-[100] ${className}`}
       >
         <div className="max-w-6xl mx-auto px-6 flex flex-col gap-4">
         <div className="flex items-center justify-between w-full">
-            <Link href="/" className="w-24 flex items-center" aria-label="На главную">
+            <Link href="/" className="w-24 flex items-center relative z-50" aria-label="На главную">
               <Image
                 src="/RUES%20VERTES.png"
                 alt="Rues Vertes"
@@ -369,21 +369,6 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 : "-translate-x-full opacity-0 pointer-events-none"
             }`}
           >
-            <Link
-              href="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="w-24 flex items-center mb-4"
-              aria-label="На главную"
-            >
-              <Image
-                src="/RUES%20VERTES.png"
-                alt="Rues Vertes"
-                width={96}
-                height={32}
-                priority
-                className="h-auto w-full max-w-[96px]"
-              />
-            </Link>
             <Link
               href="/product/RV-W-001"
               onClick={() => setIsMobileMenuOpen(false)}

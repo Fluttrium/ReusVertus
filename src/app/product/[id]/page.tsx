@@ -81,71 +81,105 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   };
 
   const checkFavorite = async () => {
-    if (!user || !product) return;
+    if (!product) return;
 
-    try {
-      const response = await fetch("/api/favorites", {
-        headers: {
-          "x-user-id": user.id,
-        },
-      });
+    if (user) {
+      // Авторизованный пользователь - проверяем на сервере
+      try {
+        const response = await fetch("/api/favorites", {
+          headers: {
+            "x-user-id": user.id,
+          },
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        const favorite = data.favorites?.find(
-          (fav: any) => fav.product.id === product.id
-        );
-        setIsFavorite(!!favorite);
-      } else {
-        // Не показываем ошибку, если просто нет избранного
+        if (response.ok) {
+          const data = await response.json();
+          const favorite = data.favorites?.find(
+            (fav: any) => fav.product.id === product.id
+          );
+          setIsFavorite(!!favorite);
+        } else {
+          setIsFavorite(false);
+        }
+      } catch (error) {
+        console.error("Error checking favorite:", error);
         setIsFavorite(false);
       }
-    } catch (error) {
-      console.error("Error checking favorite:", error);
-      setIsFavorite(false);
+    } else {
+      // Неавторизованный пользователь - проверяем localStorage
+      if (typeof window !== "undefined") {
+        try {
+          const localFavorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+          setIsFavorite(localFavorites.includes(product.id));
+        } catch (error) {
+          console.error("Error reading from localStorage:", error);
+          setIsFavorite(false);
+        }
+      }
     }
   };
 
   const handleToggleFavorite = async () => {
-    if (!user || !product) {
-      if (!user) {
-        router.push("/profile");
-      }
+    if (!product) {
       return;
     }
 
     setIsTogglingFavorite(true);
     try {
-      if (isFavorite) {
-        // Удалить из избранного
-        const response = await fetch(`/api/favorites?productId=${product.id}`, {
-          method: "DELETE",
-          headers: {
-            "x-user-id": user.id,
-          },
-        });
+      if (user) {
+        // Авторизованный пользователь - работаем с сервером
+        if (isFavorite) {
+          // Удалить из избранного
+          const response = await fetch(`/api/favorites?productId=${product.id}`, {
+            method: "DELETE",
+            headers: {
+              "x-user-id": user.id,
+            },
+          });
 
-        if (response.ok) {
-          setIsFavorite(false);
+          if (response.ok) {
+            setIsFavorite(false);
+          }
+        } else {
+          // Добавить в избранное
+          const response = await fetch("/api/favorites", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-user-id": user.id,
+            },
+            body: JSON.stringify({
+              productId: product.id,
+            }),
+          });
+
+          if (response.ok) {
+            setIsFavorite(true);
+          } else {
+            const error = await response.json();
+            alert(error.error || "Ошибка при добавлении в избранное");
+          }
         }
       } else {
-        // Добавить в избранное
-        const response = await fetch("/api/favorites", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": user.id,
-          },
-          body: JSON.stringify({
-            productId: product.id,
-          }),
-        });
+        // Неавторизованный пользователь - работаем с localStorage
+        try {
+          const localFavorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+          const favoriteIndex = localFavorites.indexOf(product.id);
 
-        if (response.ok) {
-          setIsFavorite(true);
-        } else {
-          const error = await response.json();
-          alert(error.error || "Ошибка при добавлении в избранное");
+          if (favoriteIndex >= 0) {
+            // Удалить из избранного
+            localFavorites.splice(favoriteIndex, 1);
+            setIsFavorite(false);
+          } else {
+            // Добавить в избранное
+            localFavorites.push(product.id);
+            setIsFavorite(true);
+          }
+
+          localStorage.setItem("favorites", JSON.stringify(localFavorites));
+        } catch (error) {
+          console.error("Error saving to localStorage:", error);
+          alert("Ошибка при изменении избранного");
         }
       }
     } catch (error) {
@@ -222,35 +256,65 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }, [product?.fit]);
 
   const handleAddToCart = async () => {
-    if (!user || !selectedSize) {
-      if (!user) {
-        router.push("/profile");
-      }
+    if (!selectedSize) {
       return;
     }
 
     setIsAddingToCart(true);
     try {
-      const response = await fetch("/api/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": user.id,
-        },
-        body: JSON.stringify({
+      if (user) {
+        // Авторизованный пользователь - сохраняем на сервере
+        const response = await fetch("/api/cart", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": user.id,
+          },
+          body: JSON.stringify({
+            productId: id,
+            quantity: 1,
+            size: selectedSize,
+            fit: selectedFit || null,
+          }),
+        });
+
+        if (response.ok) {
+          alert("Товар добавлен в корзину!");
+          router.push("/cart");
+        } else {
+          const error = await response.json();
+          alert(error.error || "Ошибка при добавлении в корзину");
+        }
+      } else {
+        // Неавторизованный пользователь - сохраняем в localStorage
+        const cartItem = {
           productId: id,
+          product: product,
           quantity: 1,
           size: selectedSize,
           fit: selectedFit || null,
-        }),
-      });
+          color: null,
+        };
 
-      if (response.ok) {
-        alert("Товар добавлен в корзину!");
-        router.push("/cart");
-      } else {
-        const error = await response.json();
-        alert(error.error || "Ошибка при добавлении в корзину");
+        try {
+          const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+          const existingIndex = localCart.findIndex(
+            (item: any) => item.productId === id && item.size === selectedSize && item.fit === selectedFit
+          );
+
+          if (existingIndex >= 0) {
+            localCart[existingIndex].quantity += 1;
+          } else {
+            localCart.push(cartItem);
+          }
+
+          localStorage.setItem("cart", JSON.stringify(localCart));
+          alert("Товар добавлен в корзину!");
+          router.push("/cart");
+        } catch (error) {
+          console.error("Error saving to localStorage:", error);
+          alert("Ошибка при добавлении в корзину");
+        }
       }
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -477,18 +541,14 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="flex gap-3 pt-4">
               <button
                 onClick={handleAddToCart}
-                disabled={isAddingToCart || !selectedSize || !user}
+                disabled={isAddingToCart || !selectedSize}
                 className="flex-1 bg-bg-4 text-white py-4 px-6 uppercase hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {!user
-                  ? "Войдите для добавления в корзину"
-                  : isAddingToCart
-                  ? "Добавление..."
-                  : "В корзину"}
+                {isAddingToCart ? "Добавление..." : "В корзину"}
               </button>
               <button
                 onClick={handleToggleFavorite}
-                disabled={isTogglingFavorite || !user}
+                disabled={isTogglingFavorite}
                 className={`p-4 border-2 rounded hover:border-black/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                   isFavorite
                     ? "border-bg-4 bg-bg-4 text-white"

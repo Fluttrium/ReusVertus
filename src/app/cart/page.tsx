@@ -53,29 +53,37 @@ export default function CartPage() {
   });
 
   useEffect(() => {
-    if (user) {
-      loadCart();
-    } else {
-      setIsLoading(false);
-    }
+    loadCart();
   }, [user]);
 
   const loadCart = async () => {
-    if (!user) return;
-
     try {
-      const response = await fetch("/api/cart", {
-        headers: {
-          "x-user-id": user.id,
-        },
-      });
+      if (user) {
+        // Авторизованный пользователь - загружаем с сервера
+        const response = await fetch("/api/cart", {
+          headers: {
+            "x-user-id": user.id,
+          },
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setCartItems(data.cartItems || []);
-        setError(null);
+        if (response.ok) {
+          const data = await response.json();
+          setCartItems(data.cartItems || []);
+          setError(null);
+        } else {
+          setError("Ошибка при загрузке корзины");
+        }
       } else {
-        setError("Ошибка при загрузке корзины");
+        // Неавторизованный пользователь - загружаем из localStorage
+        try {
+          const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+          setCartItems(localCart);
+          setError(null);
+        } catch (error) {
+          console.error("Error reading from localStorage:", error);
+          setCartItems([]);
+          setError(null);
+        }
       }
     } catch (error) {
       console.error("Error loading cart:", error);
@@ -86,18 +94,29 @@ export default function CartPage() {
   };
 
   const removeItem = async (itemId: string) => {
-    if (!user) return;
-
     try {
-      const response = await fetch(`/api/cart?itemId=${itemId}`, {
-        method: "DELETE",
-        headers: {
-          "x-user-id": user.id,
-        },
-      });
+      if (user) {
+        // Авторизованный пользователь - удаляем на сервере
+        const response = await fetch(`/api/cart?itemId=${itemId}`, {
+          method: "DELETE",
+          headers: {
+            "x-user-id": user.id,
+          },
+        });
 
-      if (response.ok) {
-        loadCart();
+        if (response.ok) {
+          loadCart();
+        }
+      } else {
+        // Неавторизованный пользователь - удаляем из localStorage
+        try {
+          const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+          const updatedCart = localCart.filter((item: any, index: number) => index.toString() !== itemId);
+          localStorage.setItem("cart", JSON.stringify(updatedCart));
+          loadCart();
+        } catch (error) {
+          console.error("Error removing from localStorage:", error);
+        }
       }
     } catch (error) {
       console.error("Error removing item:", error);
@@ -105,20 +124,36 @@ export default function CartPage() {
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    if (!user || quantity < 1) return;
+    if (quantity < 1) return;
 
     try {
-      const response = await fetch("/api/cart", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": user.id,
-        },
-        body: JSON.stringify({ itemId, quantity }),
-      });
+      if (user) {
+        // Авторизованный пользователь - обновляем на сервере
+        const response = await fetch("/api/cart", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": user.id,
+          },
+          body: JSON.stringify({ itemId, quantity }),
+        });
 
-      if (response.ok) {
-        loadCart();
+        if (response.ok) {
+          loadCart();
+        }
+      } else {
+        // Неавторизованный пользователь - обновляем в localStorage
+        try {
+          const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
+          const index = parseInt(itemId);
+          if (localCart[index]) {
+            localCart[index].quantity = quantity;
+            localStorage.setItem("cart", JSON.stringify(localCart));
+            loadCart();
+          }
+        } catch (error) {
+          console.error("Error updating localStorage:", error);
+        }
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -197,28 +232,6 @@ export default function CartPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-bg-1 flex flex-col">
-        <HeaderNavigation className="py-6" />
-        <div className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-          <div className="text-center py-12">
-            <p className="opacity-70 mb-6">
-              Для просмотра корзины необходимо войти в аккаунт
-            </p>
-            <Link
-              href="/profile"
-              className="inline-block bg-bg-4 text-white px-6 py-3 uppercase hover:opacity-90 transition-opacity"
-            >
-              Войти
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-bg-1 flex flex-col">
       <HeaderNavigation className="py-6" />
@@ -239,9 +252,9 @@ export default function CartPage() {
         ) : (
           <div className="space-y-6">
             {/* Товары в корзине */}
-            {cartItems.map((item) => (
+            {cartItems.map((item, index) => (
               <div
-                key={item.id}
+                key={user ? item.id : index}
                 className="flex gap-4 border-b border-black/10 pb-6"
               >
                 <div className="relative w-24 h-24 bg-bg-2 rounded overflow-hidden flex items-center justify-center">
@@ -277,7 +290,7 @@ export default function CartPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeItem(user ? item.id : index.toString())}
                   className="text-sm underline opacity-70 hover:opacity-100 self-start"
                 >
                   Удалить
