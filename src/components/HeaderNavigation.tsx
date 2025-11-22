@@ -369,6 +369,26 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
                 : "-translate-x-full opacity-0 pointer-events-none"
             }`}
           >
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="self-end w-8 h-8 flex items-center justify-center focus:outline-none"
+              aria-label="Закрыть меню"
+            >
+              <svg
+                className="w-6 h-6 text-[#FFF8F0]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
             <Link
               href="/product/RV-W-001"
               onClick={() => setIsMobileMenuOpen(false)}
