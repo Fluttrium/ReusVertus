@@ -302,17 +302,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* Основной блок: Фото слева, информация справа */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-14 items-start">
           {/* Левая колонка: Фото товара (закрепляется) */}
-          <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">
+          <div className="lg:sticky lg:top-6 lg:self-start">
             <div className="space-y-4">
               {/* Главное фото */}
-              <div className="relative w-full aspect-square bg-bg-2 rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-bg-1 rounded-xl overflow-hidden">
                 {activeImage ? (
                   <Image
                     src={activeImage}
                     alt={product?.name ? `${product.name} — фото ${selectedImageIndex + 1}` : `Фото товара ${selectedImageIndex + 1}`}
                     fill
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
+                    className="object-contain"
                     priority
                   />
                 ) : (
@@ -437,13 +437,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
 
                 {/* Таблица размеров */}
-                <details className="border border-black/10 rounded-lg">
+                <details className="border border-black/10 rounded-lg w-full h-[100%]">
                   <summary className="px-4 py-3 text-xs uppercase tracking-[0.2em] cursor-pointer select-none flex items-center justify-between">
                     <span>Таблица размеров</span>
                     <span className="text-[10px]">Раскрыть</span>
                   </summary>
-                  <div className="overflow-hidden">
-                    <table className="w-full text-xs uppercase">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-full text-xs uppercase">
                       <thead className="bg-black/5">
                         <tr>
                           <th className="px-4 py-3 text-left">Размер</th>
@@ -528,7 +528,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
            <div className="my-4 border-b border-black/20" aria-hidden="true" />
           <div className="space-y-8">
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Описание</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Описание</h2>
               <p className="leading-relaxed opacity-80">
                 {product?.description ||
                   "Премиальная футболка из высококачественного хлопка. Идеальная посадка и комфорт для повседневной носки. Минималистичный дизайн подойдет к любому образу."}
@@ -536,19 +536,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </section>
 
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Состав</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Состав</h2>
               <p className="leading-relaxed opacity-80">
                 {limitText("100% хлопок, кулирка с peach-эффектом, 250 г/м²")}
               </p>
             </section>
 
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Параметры модели</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Параметры модели</h2>
               <p className="leading-relaxed opacity-80">Рост: 180 см, размер: M</p>
             </section>
 
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Подробности, материалы и инструкция по уходу</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Подробности, материалы и инструкция по уходу</h2>
               <p className="leading-relaxed opacity-80">
                 Изделие изготавливается из высококачественного хлопка с мягкой поверхностью. Рекомендуется деликатный уход, чтобы сохранить структуру ткани и насыщенность цвета.
               </p>
@@ -556,13 +556,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="uppercase text-sm font-medium mb-1">Коллекция</h3>
+                <h2 className="uppercase text-sm font-medium mb-1">Коллекция</h2>
                 <p className="opacity-80 uppercase">{limitText("Осень-Зима 2025")}</p>
               </div>
             </section>
 
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Уход</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Уход</h2>
               <ul className="space-y-2 opacity-80">
                 <li>{limitText("• Машинная стирка при 30°C")}</li>
                 <li>{limitText("• Не отбеливать")}</li>
@@ -572,7 +572,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </section>
 
             <section>
-              <h3 className="uppercase text-sm font-medium mb-3">Доставка</h3>
+              <h2 className="uppercase text-sm font-medium mb-3">Доставка</h2>
               <p className="leading-relaxed opacity-80">
                 {limitText("Доставка по Москве и регионам России. Срок доставки: 1–3 рабочих дня.")}
               </p>

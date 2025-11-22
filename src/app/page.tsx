@@ -22,26 +22,33 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col items-center justify-center gap-2 sm:gap-4 md:gap-8 px-4 text-center translate-y-24 md:translate-y-20">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-2 sm:gap-4 md:gap-8 px-4 text-center translate-y-8 md:translate-y-20">
           <h1
             className="text-white text-3xl md:text-5xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.3] whitespace-nowrap"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 700 }}
           >
             VRT SHIRT 001
           </h1>
-          <h2
-            className="text-lg md:text-2xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.8]"
+          <h3
+            className="text-sm md:text-2xl lg:text-[4.5rem] font-bold uppercase tracking-[0.1em] leading-[1.8]"
             style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontWeight: 600, color: 'var(--bg-1)' }}
           >
-            Сообщество дизайнеров и молодых предпринимателей с уникальным мировозрением,
-            <br />
-            выражающих свои ценности через стиль одежды.
-            <br />
-            Пространство для тех, кто творит и вдохновляет
-          </h2>
+            {/* Мобильная версия */}
+            <span className="block md:hidden">
+              Сообщество дизайнеров и молодых{"\u00A0"}предпринимателей с уникальным{"\u00A0"}мировозрением, выражающих свои{"\u00A0"}ценности через стиль{"\u00A0"}одежды. Пространство для тех, кто творит и{"\u00A0"}вдохновляет
+            </span>
+            {/* Десктопная версия */}
+            <span className="hidden md:block">
+              Сообщество дизайнеров и молодых предпринимателей с уникальным мировозрением,
+              <br />
+              выражающих свои ценности через стиль одежды.
+              <br />
+              Пространство для тех, кто творит и вдохновляет
+            </span>
+          </h3>
           <Link
             href={`/product/${featuredProductId}`}
-            className="button-link px-10 py-5 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.4rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-3 md:translate-y-0 md:mt-32 whitespace-nowrap"
+            className="button-link px-10 py-5 md:px-20 md:py-8 border-[2px] border-white text-white uppercase tracking-[0.2em] text-[2.4rem] md:text-[10.4rem] font-black flex items-center justify-center transition-colors duration-200 hover:bg-white hover:text-bg-4 translate-y-3 md:translate-y-0 mt-32 whitespace-nowrap"
           >
             Shop now
           </Link>
@@ -95,7 +102,7 @@ export default function Home() {
           ].map((look, index) => (
             <div
               key={look.id}
-              className="relative aspect-[3/4] bg-bg-2 overflow-hidden rounded-lg group"
+              className="relative aspect-[3/4] bg-bg-1 overflow-hidden rounded-xl group"
             >
               <Image
                 src={look.src}

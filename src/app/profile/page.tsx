@@ -71,8 +71,8 @@ export default function ProfilePage() {
         {/* Плашка авторизации */}
         {!user ? (
           <div className="bg-bg-2 rounded-lg p-8 mb-12">
-            <h2 className="text-2xl uppercase mb-2 text-center">Профиль</h2>
-            <div className="h-[2px] bg-black/15 w-full sm:w-3/4 sm:max-w-xs mx-auto mb-6" aria-hidden="true" />
+            <h1 className="text-2xl uppercase mb-2 text-center">Профиль</h1>
+            <div className="h-[2px] bg-black/15 w-full sm:w-4/5 sm:max-w-md mx-auto mb-6" aria-hidden="true" />
             <div className="flex gap-4 justify-center mb-6">
               <button
                 onClick={() => {

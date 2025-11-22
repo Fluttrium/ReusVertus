@@ -39,7 +39,7 @@ export default function LooksPage() {
                 alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                priority={index < 2}
+                priority={index < 6}
                 className="object-cover transition-transform duration-500"
               />
               <Image
