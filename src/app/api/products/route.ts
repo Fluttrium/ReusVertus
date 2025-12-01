@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Парсинг JSON полей
-    const parsedProducts = products.map(product => ({
+    const parsedProducts = products.map((product: typeof products[0]) => ({
       ...product,
       colors: product.colors ? JSON.parse(product.colors) : null,
       sizes: product.sizes ? JSON.parse(product.sizes) : null,

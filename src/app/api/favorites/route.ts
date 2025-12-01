@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Парсинг JSON полей товаров
-    const parsedFavorites = favorites.map((fav) => {
+    const parsedFavorites = favorites.map((fav: typeof favorites[0]) => {
       let colors = null;
       let sizes = null;
 

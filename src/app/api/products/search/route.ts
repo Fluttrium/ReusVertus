@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Product } from "@prisma/client";
 
 const CYRILLIC_TO_LATIN: Record<string, string> = {
   а: "a",
@@ -108,7 +107,7 @@ const buildSearchVariants = (rawQuery: string) => {
   return Array.from(variants);
 };
 
-const computeScore = (product: Product, variants: string[]) => {
+const computeScore = (product: Awaited<ReturnType<typeof prisma.product.findMany>>[0], variants: string[]) => {
   const name = normalizeText(product.name);
   const code = normalizeText(product.code);
   const category = normalizeText(product.category);
@@ -161,7 +160,7 @@ export async function GET(request: NextRequest) {
     });
 
     const scoredProducts = allProducts
-      .map((product) => ({
+      .map((product: typeof allProducts[0]) => ({
         product: {
       id: product.id,
       name: product.name,
@@ -171,10 +170,10 @@ export async function GET(request: NextRequest) {
         },
         score: computeScore(product, variants),
       }))
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .filter((item: { product: { id: string; name: string; code: string; price: number; category: string | null }; score: number }) => item.score > 0)
+      .sort((a: { product: { id: string; name: string; code: string; price: number; category: string | null }; score: number }, b: { product: { id: string; name: string; code: string; price: number; category: string | null }; score: number }) => b.score - a.score)
       .slice(0, 15)
-      .map((item) => item.product);
+      .map((item: { product: { id: string; name: string; code: string; price: number; category: string | null }; score: number }) => item.product);
 
     return NextResponse.json({ products: scoredProducts }, { status: 200 });
   } catch (error) {

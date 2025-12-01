@@ -166,7 +166,8 @@ export default function CartPage() {
 
     setIsOrdering(true);
     try {
-      const response = await fetch("/api/orders", {
+      // Создаем платеж через ЮКассу
+      const response = await fetch("/api/payments/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -177,16 +178,20 @@ export default function CartPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert("Заказ успешно оформлен!");
-        setCartItems([]);
-        setOrderData({ address: "", phone: "", email: user.email || "" });
+        
+        // Перенаправляем на страницу оплаты ЮКассы
+        if (data.confirmationUrl) {
+          window.location.href = data.confirmationUrl;
+        } else {
+          alert("Ошибка: не получена ссылка для оплаты");
+        }
       } else {
         const error = await response.json();
-        alert(error.error || "Ошибка при оформлении заказа");
+        alert(error.error || "Ошибка при создании платежа");
       }
     } catch (error) {
-      console.error("Error creating order:", error);
-      alert("Ошибка при оформлении заказа");
+      console.error("Error creating payment:", error);
+      alert("Ошибка при создании платежа");
     } finally {
       setIsOrdering(false);
     }
@@ -353,7 +358,7 @@ export default function CartPage() {
                   disabled={isOrdering}
                   className="w-full bg-bg-4 text-white py-4 px-6 uppercase hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {isOrdering ? "Оформление..." : "Оформить заказ"}
+                  {isOrdering ? "Переход к оплате..." : "Перейти к оплате"}
                 </button>
               </form>
             </div>
