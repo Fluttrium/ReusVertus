@@ -691,6 +691,12 @@ export interface OrderResponse {
   packages?: Package[];
   seller?: Seller;
   threshold?: Threshold[];
+  // Ответ API при создании заказа
+  entity?: {
+    uuid: string;
+    cdek_number?: string;
+  };
+  requests?: any[];
 }
 
 /**
