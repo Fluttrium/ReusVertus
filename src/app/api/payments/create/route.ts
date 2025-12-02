@@ -9,7 +9,18 @@ import { createPayment } from '@/lib/yookassa';
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
-    const { address, phone, email } = await request.json();
+    const { 
+      address, 
+      phone, 
+      email, 
+      deliveryCost, 
+      deliveryType, 
+      deliveryTariff,
+      deliveryPointCode,
+      deliveryTariffCode,
+      deliveryCity,
+      deliveryCityCode,
+    } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -39,11 +50,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Вычислить общую сумму
-    const total = cartItems.reduce(
+    // Вычислить сумму товаров
+    const productsTotal = cartItems.reduce(
       (sum: number, item: typeof cartItems[0]) => sum + item.product.price * item.quantity,
       0
     );
+
+    // Добавляем стоимость доставки
+    const deliveryAmount = deliveryCost || 0;
+    const total = productsTotal + deliveryAmount;
+    
+    console.log(`[Payment] Products: ${productsTotal}₽, Delivery: ${deliveryAmount}₽, Total: ${total}₽`);
 
     // Создать заказ со статусом "awaiting_payment"
     const order = await prisma.order.create({
@@ -55,6 +72,11 @@ export async function POST(request: NextRequest) {
         email: email || null,
         status: 'awaiting_payment',
         paymentStatus: 'pending',
+        // Данные доставки СДЭК
+        deliveryType: deliveryType || null,
+        deliveryCost: deliveryAmount || null,
+        deliveryTariff: deliveryTariff || null,
+        deliveryPointCode: deliveryPointCode || null,
         orderItems: {
           create: cartItems.map((item: typeof cartItems[0]) => ({
             productId: item.productId,
@@ -78,8 +100,9 @@ export async function POST(request: NextRequest) {
     const itemNames = order.orderItems
       .map((item: typeof order.orderItems[0]) => item.product.name)
       .join(', ')
-      .substring(0, 100);
-    const description = `Заказ #${order.id.substring(0, 8)}: ${itemNames}`;
+      .substring(0, 80);
+    const deliveryInfo = deliveryAmount > 0 ? ` + доставка ${deliveryAmount}₽` : '';
+    const description = `Заказ #${order.id.substring(0, 8)}: ${itemNames}${deliveryInfo}`.substring(0, 128);
 
     // Создаем платеж в ЮКассе
     const payment = await createPayment({
@@ -107,10 +130,22 @@ export async function POST(request: NextRequest) {
       paymentId: payment.id,
       confirmationUrl: payment.confirmation?.confirmation_url,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create payment error:', error);
+    
+    // Передаем понятное сообщение об ошибке
+    const errorMessage = error.message || 'Ошибка при создании платежа';
+    
+    // Если это ошибка авторизации, возвращаем 401
+    if (errorMessage.includes('авторизации') || errorMessage.includes('credentials not configured')) {
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Ошибка при создании платежа' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

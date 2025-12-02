@@ -44,13 +44,7 @@ export default function CartPage() {
   const { user } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isOrdering, setIsOrdering] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [orderData, setOrderData] = useState({
-    address: "",
-    phone: "",
-    email: user?.email || "",
-  });
 
   useEffect(() => {
     loadCart();
@@ -160,42 +154,6 @@ export default function CartPage() {
     }
   };
 
-  const handleOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setIsOrdering(true);
-    try {
-      // Создаем платеж через ЮКассу
-      const response = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": user.id,
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Перенаправляем на страницу оплаты ЮКассы
-        if (data.confirmationUrl) {
-          window.location.href = data.confirmationUrl;
-        } else {
-          alert("Ошибка: не получена ссылка для оплаты");
-        }
-      } else {
-        const error = await response.json();
-        alert(error.error || "Ошибка при создании платежа");
-      }
-    } catch (error) {
-      console.error("Error creating payment:", error);
-      alert("Ошибка при создании платежа");
-    } finally {
-      setIsOrdering(false);
-    }
-  };
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -259,7 +217,7 @@ export default function CartPage() {
             {/* Товары в корзине */}
             {cartItems.map((item, index) => (
               <div
-                key={user ? item.id : index}
+                key={user ? item.id : `cart-item-${index}-${item.product.id}-${item.size || ''}-${item.color || ''}`}
                 className="flex gap-4 border-b border-black/10 pb-6"
               >
                 <div className="relative w-24 h-24 bg-bg-2 rounded overflow-hidden flex items-center justify-center">
@@ -310,57 +268,27 @@ export default function CartPage() {
                 <span className="text-2xl font-semibold">{total} ₽</span>
               </div>
 
-              {/* Форма оформления заказа */}
-              <form onSubmit={handleOrder} className="space-y-4">
-                <div>
-                  <label className="block text-sm uppercase mb-2">
-                    Адрес доставки
-                  </label>
-                  <input
-                    type="text"
-                    value={orderData.address}
-                    onChange={(e) =>
-                      setOrderData({ ...orderData, address: e.target.value })
-                    }
-                    required
-                    className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:outline-none focus:border-bg-4 uppercase text-sm"
-                    placeholder="Адрес доставки"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm uppercase mb-2">Телефон</label>
-                  <input
-                    type="tel"
-                    value={orderData.phone}
-                    onChange={(e) =>
-                      setOrderData({ ...orderData, phone: e.target.value })
-                    }
-                    required
-                    className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:outline-none focus:border-bg-4 uppercase text-sm"
-                    placeholder="+7 (XXX) XXX-XX-XX"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm uppercase mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={orderData.email}
-                    onChange={(e) =>
-                      setOrderData({ ...orderData, email: e.target.value })
-                    }
-                    required
-                    className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:outline-none focus:border-bg-4 uppercase text-sm"
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={isOrdering}
-                  className="w-full bg-bg-4 text-white py-4 px-6 uppercase hover:opacity-90 transition-opacity disabled:opacity-50"
+              {/* Кнопка перехода к оформлению */}
+              {user ? (
+                <Link
+                  href="/checkout"
+                  className="block w-full bg-bg-4 text-white py-4 px-6 uppercase hover:opacity-90 transition-opacity text-center"
                 >
-                  {isOrdering ? "Переход к оплате..." : "Перейти к оплате"}
-                </button>
-              </form>
+                  Перейти к оформлению заказа
+                </Link>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm opacity-70 text-center">
+                    Для оформления заказа необходимо войти в аккаунт
+                  </p>
+                  <Link
+                    href="/profile"
+                    className="block w-full bg-bg-4 text-white py-4 px-6 uppercase hover:opacity-90 transition-opacity text-center"
+                  >
+                    Войти
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

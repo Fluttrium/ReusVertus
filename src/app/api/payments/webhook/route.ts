@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getPayment } from '@/lib/yookassa';
 import { sendOrderNotification } from '@/lib/mailer';
+import { createShopOrder } from '@/lib/cdek';
 
 // IP адреса ЮКассы для проверки
 const YOOKASSA_IPS = [
@@ -91,6 +92,61 @@ export async function POST(request: NextRequest) {
         await prisma.cartItem.deleteMany({
           where: { userId: order.userId },
         });
+
+        // Создаём заказ в СДЭК (если есть данные о доставке)
+        if (order.deliveryType && order.deliveryPointCode) {
+          try {
+            console.log(`[CDEK] Creating order for ${order.id}...`);
+            
+            const cdekOrder = await createShopOrder({
+              orderId: order.id,
+              tariffCode: 136, // TODO: сохранять код тарифа в заказе
+              
+              // Отправитель (ваш магазин)
+              senderCity: 'Москва',
+              senderAddress: 'г. Москва', // TODO: заполнить реальный адрес
+              senderName: process.env.SHOP_NAME || 'RUES VERTES',
+              senderPhone: process.env.SHOP_PHONE || '+79779936494',
+              
+              // Получатель
+              recipientName: order.user?.name || 'Получатель',
+              recipientPhone: order.phone || '',
+              recipientEmail: order.email || undefined,
+              
+              // Место доставки
+              deliveryPointCode: order.deliveryPointCode || undefined,
+              deliveryCity: order.address?.split(',')[0] || undefined,
+              deliveryAddress: order.address || undefined,
+              
+              // Товары
+              items: order.orderItems.map((item: typeof order.orderItems[0]) => ({
+                name: sanitizeProductName(item.product?.name ?? 'Товар'),
+                ware_key: item.product?.code ?? item.productId.substring(0, 20),
+                cost: item.price,
+                weight: 500, // Вес товара в граммах (можно добавить в Product)
+                amount: item.quantity,
+              })),
+              
+              comment: `Интернет-заказ #${order.id.substring(0, 8)}`,
+            });
+
+            // Сохраняем данные СДЭК в заказ
+            if (cdekOrder.entity?.uuid) {
+              await prisma.order.update({
+                where: { id: order.id },
+                data: {
+                  cdekOrderUuid: cdekOrder.entity.uuid,
+                  cdekOrderNumber: cdekOrder.entity.cdek_number || null,
+                },
+              });
+              console.log(`[CDEK] Order created: ${cdekOrder.entity.uuid}`);
+            }
+          } catch (cdekError) {
+            // Логируем ошибку, но не прерываем процесс
+            console.error(`[CDEK] Error creating order:`, cdekError);
+            // Можно отправить уведомление админу о необходимости создать заказ вручную
+          }
+        }
 
         // Отправляем уведомление о заказе
         await sendOrderNotification({
@@ -220,7 +276,8 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
           orderId: order.id,
-          status: order.status,
+          status: payment.status === 'succeeded' ? 'paid' : 
+                  payment.status === 'canceled' ? 'payment_failed' : order.status,
           paymentStatus: payment.status,
           total: order.total,
         });

@@ -159,13 +159,21 @@ function PaymentSuccessContent() {
           )}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {orderStatus?.paymentStatus === "succeeded" && (
-              <Link
-                href="/profile"
-                className="inline-block bg-bg-4 text-white px-6 py-3 uppercase hover:opacity-90 transition-opacity"
-              >
-                Мои заказы
-              </Link>
+            {orderStatus?.paymentStatus === "succeeded" && orderStatus?.orderId && (
+              <>
+                <Link
+                  href={`/order/${orderStatus.orderId}`}
+                  className="inline-block bg-bg-4 text-white px-6 py-3 uppercase hover:opacity-90 transition-opacity"
+                >
+                  Посмотреть заказ
+                </Link>
+                <Link
+                  href="/profile"
+                  className="inline-block border-2 border-bg-4 text-bg-4 px-6 py-3 uppercase hover:bg-bg-4 hover:text-white transition-all"
+                >
+                  Мои заказы
+                </Link>
+              </>
             )}
             {orderStatus?.paymentStatus === "canceled" && (
               <Link
