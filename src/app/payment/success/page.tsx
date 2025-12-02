@@ -167,12 +167,12 @@ function PaymentSuccessContent() {
                 >
                   Посмотреть заказ
                 </Link>
-                <Link
-                  href="/profile"
+              <Link
+                href="/profile"
                   className="inline-block border-2 border-bg-4 text-bg-4 px-6 py-3 uppercase hover:bg-bg-4 hover:text-white transition-all"
-                >
-                  Мои заказы
-                </Link>
+              >
+                Мои заказы
+              </Link>
               </>
             )}
             {orderStatus?.paymentStatus === "canceled" && (
