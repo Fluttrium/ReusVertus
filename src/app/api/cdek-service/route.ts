@@ -13,6 +13,11 @@ const CDEK_CLIENT_ID = process.env.CDEK_CLIENT_ID || '';
 const CDEK_CLIENT_SECRET = process.env.CDEK_CLIENT_SECRET || '';
 const CDEK_TEST_MODE = process.env.CDEK_TEST_MODE === 'true';
 
+// Логируем для отладки
+if (!CDEK_CLIENT_ID || !CDEK_CLIENT_SECRET) {
+  console.error('[CDEK Service] Missing credentials! CDEK_CLIENT_ID:', !!CDEK_CLIENT_ID, 'CDEK_CLIENT_SECRET:', !!CDEK_CLIENT_SECRET);
+}
+
 const CDEK_API_URL = CDEK_TEST_MODE 
   ? 'https://api.edu.cdek.ru/v2'
   : 'https://api.cdek.ru/v2';
