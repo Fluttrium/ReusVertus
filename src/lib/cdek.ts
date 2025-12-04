@@ -886,6 +886,7 @@ export interface CreateShopOrderParams {
   // Место доставки
   deliveryPointCode?: string; // Код пункта выдачи (для доставки до ПВЗ)
   deliveryCity?: string;      // Город доставки (для курьерской)
+  deliveryCityCode?: number;  // Код города СДЭК (для to_location.code)
   deliveryAddress?: string;   // Адрес доставки (для курьерской)
   
   // Товары
@@ -923,6 +924,34 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   // Общий вес
   const totalWeight = params.items.reduce((sum, item) => sum + item.weight * item.amount, 0);
 
+  // Для ПВЗ код города обязателен - ищем его если не передан
+  let cityCode = params.deliveryCityCode;
+  if (isToOffice && params.deliveryPointCode && !cityCode && params.deliveryCity) {
+    try {
+      console.log(`[CDEK] Looking up city code for: ${params.deliveryCity}`);
+      const cities = await getCdekCitiesSuggest(params.deliveryCity, { size: 1 });
+      if (cities.length > 0 && cities[0].code) {
+        cityCode = cities[0].code;
+        console.log(`[CDEK] Found city code: ${cityCode} for ${params.deliveryCity}`);
+      }
+    } catch (error) {
+      console.warn('[CDEK] Failed to find city code:', error);
+    }
+  }
+
+  // Валидация обязательных полей
+  if (isToOffice && params.deliveryPointCode) {
+    // Для ПВЗ нужен код города
+    if (!cityCode) {
+      throw new Error(`Для создания заказа до ПВЗ требуется код города. Город: ${params.deliveryCity}`);
+    }
+  } else {
+    // Для курьера нужен адрес
+    if (!params.deliveryAddress) {
+      throw new Error('Для курьерской доставки требуется адрес доставки');
+    }
+  }
+
   // ВАЖНО: СДЭК требует ЛИБО delivery_point (для ПВЗ), ЛИБО to_location.address (для курьера)
   // Нельзя отправлять оба одновременно! 
   // Но to_location обязателен в типе, поэтому формируем его сразу
@@ -930,15 +959,15 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   // Формируем to_location в зависимости от типа доставки
   const toLocation: Location = isToOffice && params.deliveryPointCode
     ? {
-        // Для ПВЗ - только город, адрес пустой (delivery_point уже указывает ПВЗ)
-        // Пустая строка может быть проигнорирована СДЭК если указан delivery_point
+        // Для ПВЗ - код города обязателен для to_location.code
+        code: cityCode!, // Гарантируем, что cityCode не undefined после валидации
         city: params.deliveryCity || '',
         address: '', // Пустой адрес для ПВЗ - используется delivery_point
       }
     : {
         // Для курьера - полный адрес
         city: params.deliveryCity || '',
-        address: params.deliveryAddress || '',
+        address: params.deliveryAddress || '', // Гарантируем, что не пустой после валидации
       };
 
   // Формируем запрос
@@ -961,8 +990,9 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
       email: params.recipientEmail,
     },
     
-    // Место отправления
+    // Место отправления (всегда Москва)
     from_location: {
+      code: 44, // Код Москвы в СДЭК (обязательно для точности)
       city: params.senderCity,
       address: params.senderAddress,
     },

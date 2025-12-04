@@ -55,6 +55,7 @@ model Order {
   deliveryTariff     String?
   deliveryTariffCode Int?      // Код тарифа СДЭК
   deliveryCity       String?   // Город доставки
+  deliveryCityCode   Int?      // Код города СДЭК (для to_location.code)
   cdekOrderUuid      String?
   cdekOrderNumber    String?
   cdekTrackNumber    String?

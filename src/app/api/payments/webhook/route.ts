@@ -94,10 +94,12 @@ export async function POST(request: NextRequest) {
         });
 
         // Создаём заказ в СДЭК (если есть данные о доставке СДЭК)
-        // @ts-ignore - deliveryTariffCode и deliveryCity добавлены в схему
+        // @ts-ignore - deliveryTariffCode, deliveryCity, deliveryCityCode добавлены в схему
         const tariffCode = order.deliveryTariffCode || 136; // Используем сохранённый код или дефолтный
         // @ts-ignore
         const deliveryCity = order.deliveryCity || order.address?.split(',')[0] || '';
+        // @ts-ignore
+        const deliveryCityCode = order.deliveryCityCode || null;
         
         if (order.deliveryType && (order.deliveryType === 'office' || order.deliveryType === 'door' || order.deliveryType === 'cdek')) {
           try {
@@ -121,6 +123,7 @@ export async function POST(request: NextRequest) {
               // Место доставки
               deliveryPointCode: order.deliveryPointCode || undefined, // Для ПВЗ
               deliveryCity: deliveryCity,
+              deliveryCityCode: deliveryCityCode || undefined, // Код города СДЭК (для to_location.code)
               // ВАЖНО: Для ПВЗ не передаём адрес (конфликт с delivery_point)
               // Для курьера передаём полный адрес
               deliveryAddress: order.deliveryPointCode ? undefined : (order.address || undefined),

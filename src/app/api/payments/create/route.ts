@@ -78,9 +78,10 @@ export async function POST(request: NextRequest) {
         deliveryType: deliveryType || null,
         deliveryCost: deliveryAmount || null,
         deliveryTariff: deliveryTariff || null,
-        deliveryTariffCode: deliveryTariffCode || null,
-        deliveryPointCode: deliveryPointCode || null,
-        deliveryCity: deliveryCity || null,
+      deliveryTariffCode: deliveryTariffCode || null,
+      deliveryPointCode: deliveryPointCode || null,
+      deliveryCity: deliveryCity || null,
+      deliveryCityCode: deliveryCityCode || null,
         orderItems: {
           create: cartItems.map((item: typeof cartItems[0]) => ({
             productId: item.productId,
