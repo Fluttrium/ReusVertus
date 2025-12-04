@@ -956,22 +956,8 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   // Нельзя отправлять оба одновременно! 
   // Но to_location обязателен в типе, поэтому формируем его сразу
   
-  // Формируем to_location в зависимости от типа доставки
-  const toLocation: Location = isToOffice && params.deliveryPointCode
-    ? {
-        // Для ПВЗ - код города обязателен для to_location.code
-        code: cityCode!, // Гарантируем, что cityCode не undefined после валидации
-        city: params.deliveryCity || '',
-        address: '', // Пустой адрес для ПВЗ - используется delivery_point
-      }
-    : {
-        // Для курьера - полный адрес
-        city: params.deliveryCity || '',
-        address: params.deliveryAddress || '', // Гарантируем, что не пустой после валидации
-      };
-
   // Формируем запрос
-  const orderRequest: OrderRequest = {
+  const orderRequest: any = {
     type: 1, // Интернет-магазин
     number: params.orderId.substring(0, 40), // Номер заказа в нашей системе
     tariff_code: params.tariffCode,
@@ -997,9 +983,6 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
       address: params.senderAddress,
     },
     
-    // Место назначения
-    to_location: toLocation,
-    
     // Упаковка с товарами
     packages: [{
       number: '1',
@@ -1010,10 +993,23 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
       items,
     }],
   };
-  
-  // Для ПВЗ добавляем код пункта выдачи (после создания объекта)
+
+  // Формируем to_location в зависимости от типа доставки
+  // ВАЖНО: Для ПВЗ СДЭК НЕ принимает address вообще (даже пустую строку), когда есть delivery_point
   if (isToOffice && params.deliveryPointCode) {
+    // Для ПВЗ - только код города и город (БЕЗ address)
+    orderRequest.to_location = {
+      code: cityCode!,
+      city: params.deliveryCity || '',
+      // address НЕ передаём - СДЭК не принимает с delivery_point
+    };
     orderRequest.delivery_point = params.deliveryPointCode;
+  } else {
+    // Для курьера - полный адрес
+    orderRequest.to_location = {
+      city: params.deliveryCity || '',
+      address: params.deliveryAddress || '',
+    };
   }
   
   console.log('[CDEK] Order request:', JSON.stringify(orderRequest, null, 2));
