@@ -201,6 +201,19 @@ export async function POST(request: NextRequest) {
       case 'calculate':
       case 'calculator': {
         // Расчёт стоимости доставки
+        // Валидация: если to_location пустой или не содержит обязательных полей - возвращаем пустой ответ
+        if (params.to_location && (Object.keys(params.to_location).length === 0 || (!params.to_location.code && !params.to_location.city))) {
+          console.warn('[CDEK Service] Empty to_location, returning empty tariffs');
+          return NextResponse.json({
+            tariff_codes: [],
+          }, {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            },
+          });
+        }
         data = await proxyToCdek('/calculator/tarifflist', 'POST', params);
         break;
       }
