@@ -44,10 +44,12 @@ async function getYooKassaClient() {
     yookassaInstance = new YooKassa({
       shopId: shopId,
       secretKey: secretKey,
+      timeout: 30000, // 30 секунд таймаут вместо дефолтного ~2 минут
+      debug: process.env.NODE_ENV === 'development',
     });
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[YooKassa Debug] Client initialized successfully');
+      console.log('[YooKassa Debug] Client initialized successfully with 30s timeout');
     }
   } catch (error: any) {
     console.error('[YooKassa Debug] Initialization error:', error);
@@ -132,18 +134,22 @@ export async function createPayment(params: CreatePaymentParams): Promise<Paymen
 
     return payment as PaymentResult;
   } catch (error: any) {
-    // Детальное логирование ошибок для отладки
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[YooKassa Debug] Payment creation error:', {
-        message: error.message,
-        response: error.response ? {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data,
-        } : null,
-        stack: error.stack,
-      });
-    }
+    // Детальное логирование ошибок для отладки (всегда логируем для диагностики)
+    console.error('[YooKassa Debug] Payment creation error:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      type: error.type,
+      response: error.response ? {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+      } : null,
+      // Полный объект ошибки для отладки
+      errorKeys: Object.keys(error),
+      errorString: String(error),
+      stack: error.stack,
+    });
     
     // Обработка ошибок API ЮКассы
     if (error.response) {
@@ -168,8 +174,35 @@ export async function createPayment(params: CreatePaymentParams): Promise<Paymen
       throw error;
     }
     
-    // Другие ошибки
-    throw new Error(`Ошибка при создании платежа: ${error.message || 'Неизвестная ошибка'}`);
+    // Проверка на таймаут (включая axios таймаут)
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED' || error.name === 'TimeoutError' || 
+        error.message?.includes('timeout') || error.message?.includes('Timeout')) {
+      throw new Error('Таймаут при подключении к ЮКассе. Попробуйте позже.');
+    }
+    
+    // Проверка на сетевые ошибки
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+      throw new Error('Ошибка сети при подключении к ЮКассе. Проверьте интернет-соединение.');
+    }
+    
+    // Проверка на TLS/SSL ошибки (часто из-за firewall или proxy)
+    if (error.stack?.includes('TLSSocket') || error.stack?.includes('socketErrorListener') || 
+        error.code === 'ECONNRESET' || error.code === 'EPIPE' || error.name === 'AggregateError') {
+      throw new Error('Ошибка SSL/TLS соединения с ЮКассе. Возможные причины: VPN, firewall, или проблемы с сетью. Попробуйте отключить VPN или проверьте настройки сети.');
+    }
+    
+    // Axios специфические ошибки
+    if (error.isAxiosError) {
+      const axiosMessage = error.response?.data?.description || 
+                           error.response?.statusText || 
+                           error.message || 
+                           'Ошибка HTTP запроса';
+      throw new Error(`Ошибка запроса к ЮКассе: ${axiosMessage}`);
+    }
+    
+    // Другие ошибки - включаем больше информации
+    const errorInfo = error.message || error.code || error.name || String(error) || 'Неизвестная ошибка';
+    throw new Error(`Ошибка при создании платежа: ${errorInfo}`);
   }
 }
 

@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
     const { 
+      recipientName,
       address, 
       phone, 
       email, 
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         total,
+        recipientName: recipientName || null,
         address: address || null,
         phone: phone || null,
         email: email || null,
@@ -76,7 +78,9 @@ export async function POST(request: NextRequest) {
         deliveryType: deliveryType || null,
         deliveryCost: deliveryAmount || null,
         deliveryTariff: deliveryTariff || null,
+        deliveryTariffCode: deliveryTariffCode || null,
         deliveryPointCode: deliveryPointCode || null,
+        deliveryCity: deliveryCity || null,
         orderItems: {
           create: cartItems.map((item: typeof cartItems[0]) => ({
             productId: item.productId,

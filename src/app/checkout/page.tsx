@@ -90,6 +90,7 @@ export default function CheckoutPage() {
   
   // Данные для оформления заказа
   const [orderData, setOrderData] = useState({
+    recipientName: "", // ФИО получателя для СДЭК
     address: "",
     city: "",
     phone: "",
@@ -316,6 +317,7 @@ export default function CheckoutPage() {
           "x-user-id": user.id,
         },
         body: JSON.stringify({
+          recipientName: orderData.recipientName,
           address: deliveryAddress,
           phone: orderData.phone,
           email: orderData.email,
@@ -418,9 +420,23 @@ export default function CheckoutPage() {
             {/* Контактные данные */}
             <div className="bg-white border-2 border-black/10 p-6 rounded-lg space-y-4">
               <h2 className="text-xl uppercase border-b-2 border-black/20 pb-3 font-semibold">
-                Контактные данные
+                Данные получателя
               </h2>
               
+              <div>
+                <label className="block text-sm uppercase mb-2 font-medium">ФИО получателя *</label>
+                <input
+                  type="text"
+                  value={orderData.recipientName}
+                  onChange={(e) =>
+                    setOrderData({ ...orderData, recipientName: e.target.value })
+                  }
+                  required
+                  className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:outline-none focus:border-bg-4 focus:ring-2 focus:ring-bg-4/20 transition-all text-sm"
+                  placeholder="Иванов Иван Иванович"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm uppercase mb-2 font-medium">Email *</label>
                 <input

@@ -39,6 +39,7 @@ model Order {
   userId        String
   total         Int
   status        String      @default("pending")
+  recipientName String?     // ФИО получателя для СДЭК
   address       String?
   phone         String?
   email         String?
@@ -48,13 +49,15 @@ model Order {
   paymentStatus String?
   
   // Данные доставки СДЭК
-  deliveryType      String?
-  deliveryPointCode String?
-  deliveryCost      Int?
-  deliveryTariff    String?
-  cdekOrderUuid     String?
-  cdekOrderNumber   String?
-  cdekTrackNumber   String?
+  deliveryType       String?
+  deliveryPointCode  String?
+  deliveryCost       Int?
+  deliveryTariff     String?
+  deliveryTariffCode Int?      // Код тарифа СДЭК
+  deliveryCity       String?   // Город доставки
+  cdekOrderUuid      String?
+  cdekOrderNumber    String?
+  cdekTrackNumber    String?
   
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]

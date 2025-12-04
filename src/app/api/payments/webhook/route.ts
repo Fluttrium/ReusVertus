@@ -93,29 +93,34 @@ export async function POST(request: NextRequest) {
           where: { userId: order.userId },
         });
 
-        // Создаём заказ в СДЭК (если есть данные о доставке)
-        if (order.deliveryType && order.deliveryPointCode) {
+        // Создаём заказ в СДЭК (если есть данные о доставке СДЭК)
+        // @ts-ignore - deliveryTariffCode и deliveryCity добавлены в схему
+        const tariffCode = order.deliveryTariffCode || 136; // Используем сохранённый код или дефолтный
+        // @ts-ignore
+        const deliveryCity = order.deliveryCity || order.address?.split(',')[0] || '';
+        
+        if (order.deliveryType && (order.deliveryType === 'office' || order.deliveryType === 'door' || order.deliveryType === 'cdek')) {
           try {
-            console.log(`[CDEK] Creating order for ${order.id}...`);
+            console.log(`[CDEK] Creating order for ${order.id}, type: ${order.deliveryType}, tariff: ${tariffCode}...`);
             
             const cdekOrder = await createShopOrder({
               orderId: order.id,
-              tariffCode: 136, // TODO: сохранять код тарифа в заказе
+              tariffCode: tariffCode,
               
               // Отправитель (ваш магазин)
               senderCity: 'Москва',
-              senderAddress: 'г. Москва', // TODO: заполнить реальный адрес
+              senderAddress: process.env.SHOP_ADDRESS || 'г. Москва',
               senderName: process.env.SHOP_NAME || 'RUES VERTES',
               senderPhone: process.env.SHOP_PHONE || '+79779936494',
               
               // Получатель
-              recipientName: order.user?.name || 'Получатель',
+              recipientName: order.recipientName || order.user?.name || 'Получатель',
               recipientPhone: order.phone || '',
               recipientEmail: order.email || undefined,
               
               // Место доставки
-              deliveryPointCode: order.deliveryPointCode || undefined,
-              deliveryCity: order.address?.split(',')[0] || undefined,
+              deliveryPointCode: order.deliveryPointCode || undefined, // Для ПВЗ
+              deliveryCity: deliveryCity,
               deliveryAddress: order.address || undefined,
               
               // Товары
@@ -139,13 +144,17 @@ export async function POST(request: NextRequest) {
                   cdekOrderNumber: cdekOrder.entity.cdek_number || null,
                 },
               });
-              console.log(`[CDEK] Order created: ${cdekOrder.entity.uuid}`);
+              console.log(`[CDEK] Order created successfully: UUID=${cdekOrder.entity.uuid}, Number=${cdekOrder.entity.cdek_number}`);
+            } else {
+              console.warn(`[CDEK] Order created but no UUID received:`, cdekOrder);
             }
           } catch (cdekError) {
             // Логируем ошибку, но не прерываем процесс
             console.error(`[CDEK] Error creating order:`, cdekError);
-            // Можно отправить уведомление админу о необходимости создать заказ вручную
+            // TODO: отправить уведомление админу о необходимости создать заказ вручную
           }
+        } else {
+          console.log(`[CDEK] Skipping order creation - deliveryType: ${order.deliveryType}`);
         }
 
         // Отправляем уведомление о заказе
