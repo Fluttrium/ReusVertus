@@ -201,8 +201,14 @@ export async function POST(request: NextRequest) {
       case 'calculate':
       case 'calculator': {
         // Расчёт стоимости доставки
-        // Валидация: если to_location пустой или не содержит обязательных полей - возвращаем пустой ответ
-        if (params.to_location && (Object.keys(params.to_location).length === 0 || (!params.to_location.code && !params.to_location.city))) {
+        // Валидация: если to_location пустой объект или не содержит никаких данных - возвращаем пустой ответ
+        // Валидными считаются: code, city, address, postal_code
+        const toLocation = params.to_location;
+        const isEmpty = !toLocation || 
+          Object.keys(toLocation).length === 0 || 
+          (!toLocation.code && !toLocation.city && !toLocation.address && !toLocation.postal_code);
+        
+        if (isEmpty) {
           console.warn('[CDEK Service] Empty to_location, returning empty tariffs');
           return NextResponse.json({
             tariff_codes: [],

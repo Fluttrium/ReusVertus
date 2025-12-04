@@ -3,8 +3,51 @@
 import HeaderNavigation from "@/components/HeaderNavigation";
 import Footer from "@/components/Footer";
 import EmailSubscription from "@/components/EmailSubscription";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
+import Image from "next/image";
+
+interface OrderItem {
+  id: string;
+  quantity: number;
+  price: number;
+  size: string | null;
+  color: string | null;
+  product: {
+    id: string;
+    name: string;
+    code: string;
+    imageUrl: string | null;
+  };
+}
+
+interface Order {
+  id: string;
+  status: string;
+  paymentStatus: string | null;
+  total: number;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+  orderItems: OrderItem[];
+}
+
+const FALLBACK_PRODUCT_IMAGE = "/shirt/shirt1.png";
+
+const getStatusText = (status: string, paymentStatus: string | null) => {
+  if (paymentStatus === "succeeded" || status === "paid") {
+    return { text: "Оплачен", color: "text-green-600" };
+  }
+  if (paymentStatus === "pending" || status === "awaiting_payment") {
+    return { text: "Ожидает оплаты", color: "text-yellow-600" };
+  }
+  if (paymentStatus === "canceled" || status === "payment_failed") {
+    return { text: "Отменен", color: "text-red-600" };
+  }
+  return { text: "В обработке", color: "text-gray-600" };
+};
 
 export default function ProfilePage() {
   const { user, login, register, logout, isLoading } = useAuth();
@@ -14,6 +57,45 @@ export default function ProfilePage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Состояния для заказов
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  // Загружаем заказы при авторизации
+  useEffect(() => {
+    if (user) {
+      loadOrders();
+    }
+  }, [user]);
+
+  const loadOrders = async () => {
+    if (!user) return;
+    
+    setOrdersLoading(true);
+    setOrdersError(null);
+    
+    try {
+      const response = await fetch("/api/orders", {
+        headers: {
+          "x-user-id": user.id,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data.orders || []);
+      } else {
+        setOrdersError("Ошибка при загрузке заказов");
+      }
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      setOrdersError("Ошибка при загрузке заказов");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,7 +248,7 @@ export default function ProfilePage() {
                 Выйти
               </button>
             </div>
-            <div className="space-y-4 bg-bg-2 rounded-lg p-6">
+            <div className="space-y-4 bg-bg-2 rounded-lg p-6 mb-8">
               <p>
                 <span className="font-medium uppercase">Email:</span> {user.email}
               </p>
@@ -174,6 +256,117 @@ export default function ProfilePage() {
                 <p>
                   <span className="font-medium uppercase">Имя:</span> {user.name}
                 </p>
+              )}
+            </div>
+
+            {/* Секция "Мои заказы" */}
+            <div className="mb-12">
+              <h2 className="text-2xl uppercase mb-6">Мои заказы</h2>
+              
+              {ordersLoading ? (
+                <div className="text-center py-12">
+                  <p className="opacity-70 uppercase">Загрузка заказов...</p>
+                </div>
+              ) : ordersError ? (
+                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-700 text-sm text-center">
+                  {ordersError}
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="bg-bg-2 rounded-lg p-8 text-center">
+                  <p className="opacity-70 uppercase mb-4">Заказов нет</p>
+                  <Link
+                    href="/"
+                    className="inline-block bg-bg-4 text-white px-6 py-3 uppercase hover:opacity-90 transition-opacity"
+                  >
+                    Перейти к покупкам
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order) => {
+                    const statusInfo = getStatusText(order.status, order.paymentStatus);
+                    const firstItem = order.orderItems[0];
+                    const itemsCount = order.orderItems.length;
+                    
+                    return (
+                      <Link
+                        key={order.id}
+                        href={`/order/${order.id}`}
+                        className="block bg-bg-2 rounded-lg p-6 hover:bg-bg-2/80 transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+                          {/* Изображение первого товара */}
+                          {firstItem?.product?.imageUrl && (
+                            <div className="relative w-24 h-24 sm:w-20 sm:h-20 flex-shrink-0 bg-white rounded">
+                              <Image
+                                src={firstItem.product.imageUrl || FALLBACK_PRODUCT_IMAGE}
+                                alt={firstItem.product.name || "Товар"}
+                                fill
+                                className="object-contain rounded"
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Информация о заказе */}
+                          <div className="flex-grow min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                              <div>
+                                <p className="font-medium uppercase text-sm opacity-70">
+                                  Заказ #{order.id.substring(0, 8).toUpperCase()}
+                                </p>
+                                <p className="text-xs opacity-60 mt-1">
+                                  {new Date(order.createdAt).toLocaleDateString("ru-RU", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
+                              </div>
+                              <span className={`font-semibold uppercase text-sm ${statusInfo.color}`}>
+                                {statusInfo.text}
+                              </span>
+                            </div>
+                            
+                            <div className="text-sm opacity-70">
+                              <p>
+                                {itemsCount === 1
+                                  ? `1 товар`
+                                  : `${itemsCount} товара`}
+                                {" • "}
+                                {order.total.toLocaleString("ru-RU")} ₽
+                              </p>
+                              {firstItem && (
+                                <p className="mt-1 truncate">
+                                  {firstItem.product.name}
+                                  {itemsCount > 1 && ` и еще ${itemsCount - 1}`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Стрелка */}
+                          <div className="flex-shrink-0 text-bg-4 opacity-50">
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
