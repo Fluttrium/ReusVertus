@@ -995,13 +995,15 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   };
 
   // Формируем to_location в зависимости от типа доставки
-  // ВАЖНО: Для ПВЗ СДЭК НЕ принимает address вообще (даже пустую строку), когда есть delivery_point
+  // ВАЖНО: СДЭК требует address в to_location, даже для ПВЗ
+  // Но address не должен содержать конкретный адрес (только город), т.к. используется delivery_point
   if (isToOffice && params.deliveryPointCode) {
-    // Для ПВЗ - только код города и город (БЕЗ address)
+    // Для ПВЗ - код города, город и минимальный address (название города)
+    // delivery_point уже указывает конкретный ПВЗ
     orderRequest.to_location = {
       code: cityCode!,
       city: params.deliveryCity || '',
-      // address НЕ передаём - СДЭК не принимает с delivery_point
+      address: params.deliveryCity || '', // Город как минимальный адрес для ПВЗ
     };
     orderRequest.delivery_point = params.deliveryPointCode;
   } else {
