@@ -121,7 +121,9 @@ export async function POST(request: NextRequest) {
               // Место доставки
               deliveryPointCode: order.deliveryPointCode || undefined, // Для ПВЗ
               deliveryCity: deliveryCity,
-              deliveryAddress: order.address || undefined,
+              // ВАЖНО: Для ПВЗ не передаём адрес (конфликт с delivery_point)
+              // Для курьера передаём полный адрес
+              deliveryAddress: order.deliveryPointCode ? undefined : (order.address || undefined),
               
               // Товары
               items: order.orderItems.map((item: typeof order.orderItems[0]) => ({

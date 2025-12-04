@@ -922,7 +922,25 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   
   // Общий вес
   const totalWeight = params.items.reduce((sum, item) => sum + item.weight * item.amount, 0);
+
+  // ВАЖНО: СДЭК требует ЛИБО delivery_point (для ПВЗ), ЛИБО to_location.address (для курьера)
+  // Нельзя отправлять оба одновременно! 
+  // Но to_location обязателен в типе, поэтому формируем его сразу
   
+  // Формируем to_location в зависимости от типа доставки
+  const toLocation: Location = isToOffice && params.deliveryPointCode
+    ? {
+        // Для ПВЗ - только город, адрес пустой (delivery_point уже указывает ПВЗ)
+        // Пустая строка может быть проигнорирована СДЭК если указан delivery_point
+        city: params.deliveryCity || '',
+        address: '', // Пустой адрес для ПВЗ - используется delivery_point
+      }
+    : {
+        // Для курьера - полный адрес
+        city: params.deliveryCity || '',
+        address: params.deliveryAddress || '',
+      };
+
   // Формируем запрос
   const orderRequest: OrderRequest = {
     type: 1, // Интернет-магазин
@@ -950,9 +968,7 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
     },
     
     // Место назначения
-    to_location: isToOffice 
-      ? { code: parseInt(params.deliveryPointCode!.replace(/\D/g, '')) || undefined, address: params.deliveryAddress || '' }
-      : { city: params.deliveryCity, address: params.deliveryAddress || '' },
+    to_location: toLocation,
     
     // Упаковка с товарами
     packages: [{
@@ -965,7 +981,7 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
     }],
   };
   
-  // Если доставка до ПВЗ - добавляем код пункта
+  // Для ПВЗ добавляем код пункта выдачи (после создания объекта)
   if (isToOffice && params.deliveryPointCode) {
     orderRequest.delivery_point = params.deliveryPointCode;
   }
