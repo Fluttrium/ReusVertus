@@ -564,41 +564,35 @@ export default function CheckoutPage() {
 
             {/* Информация о выбранном пункте */}
             {cdekData && (
-              <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="mt-6 space-y-4">
                 {/* Информация о выбранном пункте выдачи */}
                 {cdekData.mode === 'office' && cdekData.office && (
-                  <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-300 rounded-xl p-5 shadow-sm">
+                  <div className="bg-bg-2 border-2 border-black/10 rounded-lg p-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded font-medium">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs uppercase tracking-wider opacity-70">
                             Пункт выдачи
                           </span>
-                          <span className="text-xs text-green-600">{cdekData.office.type}</span>
                         </div>
-                        <p className="font-bold text-green-800 mb-1">{cdekData.office.name}</p>
-                        <p className="text-sm text-green-700">
+                        <p className="font-semibold uppercase mb-2">{cdekData.office.name}</p>
+                        <p className="text-sm opacity-70 mb-3">
                           {cdekData.office.city}, {cdekData.office.address}
                         </p>
-                        <div className="flex flex-wrap gap-2 mt-3">
+                        <div className="flex flex-wrap gap-2 pt-3 border-t border-black/10">
                           {cdekData.office.work_time && (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-green-600 bg-white px-2 py-1 rounded-full">
-                              🕐 {cdekData.office.work_time}
+                            <span className="inline-flex items-center gap-1.5 text-xs uppercase opacity-60">
+                              {cdekData.office.work_time}
                             </span>
                           )}
                           {cdekData.office.have_cash && (
-                            <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-white px-2 py-1 rounded-full">
-                              💵 Наличные
+                            <span className="inline-flex items-center gap-1 text-xs uppercase opacity-60">
+                              Наличные
                             </span>
                           )}
                           {cdekData.office.have_cashless && (
-                            <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-white px-2 py-1 rounded-full">
-                              💳 Карта
+                            <span className="inline-flex items-center gap-1 text-xs uppercase opacity-60">
+                              Карта
                             </span>
                           )}
                         </div>
@@ -609,19 +603,16 @@ export default function CheckoutPage() {
 
                 {/* Информация о доставке до двери */}
                 {cdekData.mode === 'door' && cdekData.door && (
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-5 shadow-sm">
+                  <div className="bg-bg-2 border-2 border-black/10 rounded-lg p-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                      </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded font-medium">
-                          До двери
-                        </span>
-                        <p className="font-bold text-blue-800 mb-1 mt-1">Курьерская доставка</p>
-                        <p className="text-sm text-blue-700">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs uppercase tracking-wider opacity-70">
+                            До двери
+                          </span>
+                        </div>
+                        <p className="font-semibold uppercase mb-2">Курьерская доставка</p>
+                        <p className="text-sm opacity-70">
                           {cdekData.door.city}, {cdekData.door.formatted || cdekData.door.name}
                         </p>
                       </div>
@@ -631,20 +622,20 @@ export default function CheckoutPage() {
 
                 {/* Информация о тарифе */}
                 {cdekData.tariff && (
-                  <div className="bg-white border-2 border-gray-200 rounded-xl p-5">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-bg-2 border-2 border-black/10 rounded-lg p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Выбранный тариф</p>
-                        <p className="font-semibold text-gray-800">{cdekData.tariff.tariff_name}</p>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Выбранный тариф</p>
+                        <p className="font-semibold uppercase mb-1">{cdekData.tariff.tariff_name}</p>
+                        <p className="text-sm opacity-70">
                           {cdekData.tariff.period_min === cdekData.tariff.period_max 
                             ? `${cdekData.tariff.period_min} дней` 
                             : `${cdekData.tariff.period_min}-${cdekData.tariff.period_max} дней`}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500 mb-1">Стоимость</p>
-                        <p className="font-bold text-2xl text-green-600">{cdekData.tariff.delivery_sum.toLocaleString('ru-RU')} ₽</p>
+                      <div className="sm:text-right">
+                        <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Стоимость</p>
+                        <p className="font-bold text-2xl">{cdekData.tariff.delivery_sum.toLocaleString('ru-RU')} ₽</p>
                       </div>
                     </div>
                   </div>
@@ -657,7 +648,7 @@ export default function CheckoutPage() {
         {/* Кнопка оформления */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-md mx-auto">
-            <div className="bg-white border-2 border-black/10 p-6 rounded-lg">
+            <div className="bg-bg-1 border-2 border-black/10 p-6 rounded-lg">
               <div className="mb-4 text-xs opacity-70 text-center">
                 Все транзакции защищены и зашифрованы
               </div>
