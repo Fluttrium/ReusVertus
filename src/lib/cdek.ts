@@ -995,21 +995,14 @@ export async function createShopOrder(params: CreateShopOrderParams): Promise<Or
   };
 
   // Формируем to_location в зависимости от типа доставки
-  // Согласно документации СДЭК: для ПВЗ нельзя передавать address в to_location когда указан delivery_point
-  // Но address обязателен для Location, поэтому создаём объект динамически
+  // Согласно документации СДЭК: delivery_point НЕ может использоваться одновременно с to_location
+  // Для ПВЗ передаём ТОЛЬКО delivery_point, to_location НЕ передаём вообще
   if (isToOffice && params.deliveryPointCode) {
-    // Для ПВЗ - только code (обязательно), city опционально, address НЕ передаём
-    // Создаём объект без address, чтобы СДЭК не ругался
-    const toLocationPvz: any = {
-      code: cityCode!,
-    };
-    if (params.deliveryCity) {
-      toLocationPvz.city = params.deliveryCity;
-    }
-    orderRequest.to_location = toLocationPvz;
+    // Для ПВЗ - только delivery_point (to_location НЕ передаём!)
     orderRequest.delivery_point = params.deliveryPointCode;
+    // to_location НЕ добавляем - конфликт с delivery_point по документации СДЭК
   } else {
-    // Для курьера - полный адрес
+    // Для курьера - полный адрес в to_location (delivery_point НЕ передаём)
     orderRequest.to_location = {
       city: params.deliveryCity || '',
       address: params.deliveryAddress || '',
