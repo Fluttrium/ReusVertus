@@ -80,6 +80,13 @@ const getProductImageSrc = (url: string | null) => {
   }
 };
 
+// Функция для проверки, является ли город Москвой
+const isMoscowCity = (cityName: string | null | undefined): boolean => {
+  if (!cityName) return false;
+  const normalized = cityName.toLowerCase().trim();
+  return normalized.includes('москв') || normalized === 'moscow';
+};
+
 export default function CheckoutPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -111,6 +118,7 @@ export default function CheckoutPage() {
   const [citySuggestions, setCitySuggestions] = useState<Array<{ name: string; code?: number; region?: string }>>([]);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   
   // Ref для debounce таймера
   const citySearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -161,6 +169,12 @@ export default function CheckoutPage() {
       return;
     }
     loadCart();
+    
+    // Проверяем подписку на рассылку
+    if (typeof window !== "undefined" && window.localStorage) {
+      const subscribed = localStorage.getItem("email_subscribed") === "true";
+      setIsSubscribed(subscribed);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -306,8 +320,11 @@ export default function CheckoutPage() {
         deliveryAddress = `Курьер СДЭК: ${cdekData.door.city}, ${cdekData.door.formatted || cdekData.door.name}`;
       }
 
-      // Стоимость доставки
-      const deliveryCost = cdekData?.tariff?.delivery_sum || 0;
+      // Определяем город доставки
+      const deliveryCityName = cdekData?.office?.city || cdekData?.door?.city || orderData.city || '';
+      
+      // Стоимость доставки (бесплатно для Москвы)
+      const deliveryCost = isMoscowCity(deliveryCityName) ? 0 : (cdekData?.tariff?.delivery_sum || 0);
 
       // Создаем платеж через ЮКассу
       const response = await fetch("/api/payments/create", {
@@ -328,6 +345,7 @@ export default function CheckoutPage() {
           deliveryTariffCode: cdekData?.tariff?.tariff_code || null,
           deliveryCity: cdekData?.office?.city || cdekData?.door?.city || orderData.city,
           deliveryCityCode: cdekData?.office?.city_code || null,
+          subscriptionDiscount: subscriptionDiscount, // Скидка за подписку
         }),
       });
 
@@ -363,8 +381,9 @@ export default function CheckoutPage() {
     0
   );
 
-  const deliveryCost = selectedTariff ? selectedTariff.delivery_sum : 0;
-  const finalTotal = total + deliveryCost;
+  // Скидка 10% за подписку на рассылку
+  const subscriptionDiscount = isSubscribed ? Math.round(total * 0.1) : 0;
+  const totalWithDiscount = total - subscriptionDiscount;
 
   if (isLoading) {
     return (
@@ -521,18 +540,36 @@ export default function CheckoutPage() {
                   <span className="opacity-70">Товары:</span>
                   <span>{total} ₽</span>
                 </div>
-                {cdekData?.tariff && (
+                {isSubscribed && subscriptionDiscount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="opacity-70">Доставка СДЭК:</span>
-                    <span>{cdekData.tariff.delivery_sum} ₽</span>
+                    <span className="opacity-70">Скидка за подписку (10%):</span>
+                    <span className="text-green-600 font-medium">-{subscriptionDiscount.toLocaleString('ru-RU')} ₽</span>
                   </div>
                 )}
+                {cdekData?.tariff && (() => {
+                  const deliveryCityName = cdekData?.office?.city || cdekData?.door?.city || orderData.city || '';
+                  const isMoscow = isMoscowCity(deliveryCityName);
+                  
+                  return (
+                    <div className="flex justify-between text-sm">
+                      <span className="opacity-70">Доставка СДЭК:</span>
+                      {isMoscow ? (
+                        <span className="text-green-600 font-medium">Бесплатно</span>
+                      ) : (
+                        <span>{cdekData.tariff.delivery_sum} ₽</span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <div className="flex justify-between items-center pt-2 border-t border-black/20">
                   <span className="text-lg uppercase font-semibold">Итого:</span>
                   <span className="text-2xl font-bold">
-                    {cdekData?.tariff
-                      ? (total + cdekData.tariff.delivery_sum).toLocaleString('ru-RU')
-                      : total.toLocaleString('ru-RU')} ₽
+                    {(() => {
+                      const deliveryCityName = cdekData?.office?.city || cdekData?.door?.city || orderData.city || '';
+                      const isMoscow = isMoscowCity(deliveryCityName);
+                      const deliveryPrice = (cdekData?.tariff && !isMoscow) ? cdekData.tariff.delivery_sum : 0;
+                      return (totalWithDiscount + deliveryPrice).toLocaleString('ru-RU');
+                    })()} ₽
                   </span>
                 </div>
               </div>

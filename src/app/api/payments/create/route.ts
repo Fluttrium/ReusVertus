@@ -3,6 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { createPayment } from '@/lib/yookassa';
 
 /**
+ * Функция для проверки, является ли город Москвой
+ */
+function isMoscowCity(cityName: string | null | undefined): boolean {
+  if (!cityName) return false;
+  const normalized = cityName.toLowerCase().trim();
+  return normalized.includes('москв') || normalized === 'moscow';
+}
+
+/**
  * POST /api/payments/create
  * Создание платежа в ЮКассе и заказа в базе данных
  */
@@ -21,6 +30,7 @@ export async function POST(request: NextRequest) {
       deliveryTariffCode,
       deliveryCity,
       deliveryCityCode,
+      subscriptionDiscount = 0, // Скидка за подписку на рассылку
     } = await request.json();
 
     if (!userId) {
@@ -57,11 +67,16 @@ export async function POST(request: NextRequest) {
       0
     );
 
-    // Добавляем стоимость доставки
-    const deliveryAmount = deliveryCost || 0;
-    const total = productsTotal + deliveryAmount;
+    // Применяем скидку за подписку (10% от суммы товаров)
+    const discountAmount = subscriptionDiscount || 0;
+    const productsTotalWithDiscount = productsTotal - discountAmount;
+
+    // Проверяем, является ли город доставки Москвой (доставка бесплатна)
+    const isMoscow = isMoscowCity(deliveryCity);
+    const deliveryAmount = isMoscow ? 0 : (deliveryCost || 0);
+    const total = productsTotalWithDiscount + deliveryAmount;
     
-    console.log(`[Payment] Products: ${productsTotal}₽, Delivery: ${deliveryAmount}₽, Total: ${total}₽`);
+    console.log(`[Payment] Products: ${productsTotal}₽, Discount: ${discountAmount}₽, Products after discount: ${productsTotalWithDiscount}₽, Delivery: ${deliveryAmount}₽ ${isMoscow ? '(бесплатно для Москвы)' : ''}, Total: ${total}₽`);
 
     // Создать заказ со статусом "awaiting_payment"
     const order = await prisma.order.create({
@@ -106,8 +121,9 @@ export async function POST(request: NextRequest) {
       .map((item: typeof order.orderItems[0]) => item.product.name)
       .join(', ')
       .substring(0, 80);
+    const discountInfo = discountAmount > 0 ? ` - скидка ${discountAmount}₽` : '';
     const deliveryInfo = deliveryAmount > 0 ? ` + доставка ${deliveryAmount}₽` : '';
-    const description = `Заказ #${order.id.substring(0, 8)}: ${itemNames}${deliveryInfo}`.substring(0, 128);
+    const description = `Заказ #${order.id.substring(0, 8)}: ${itemNames}${discountInfo}${deliveryInfo}`.substring(0, 128);
 
     // Создаем платеж в ЮКассе
     const payment = await createPayment({
