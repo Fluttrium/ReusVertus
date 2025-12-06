@@ -554,7 +554,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm">
                       <span className="opacity-70">Доставка СДЭК:</span>
                       {isMoscow ? (
-                        <span className="text-green-600 font-medium">Бесплатно</span>
+                        <span className="text-bg-4 font-medium">Бесплатно</span>
                       ) : (
                         <span>{cdekData.tariff.delivery_sum} ₽</span>
                       )}
@@ -658,25 +658,34 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Информация о тарифе */}
-                {cdekData.tariff && (
-                  <div className="bg-bg-2 border-2 border-black/10 rounded-lg p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Выбранный тариф</p>
-                        <p className="font-semibold uppercase mb-1">{cdekData.tariff.tariff_name}</p>
-                        <p className="text-sm opacity-70">
-                          {cdekData.tariff.period_min === cdekData.tariff.period_max 
-                            ? `${cdekData.tariff.period_min} дней` 
-                            : `${cdekData.tariff.period_min}-${cdekData.tariff.period_max} дней`}
-                        </p>
-                      </div>
-                      <div className="sm:text-right">
-                        <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Стоимость</p>
-                        <p className="font-bold text-2xl">{cdekData.tariff.delivery_sum.toLocaleString('ru-RU')} ₽</p>
+                {cdekData.tariff && (() => {
+                  const deliveryCityName = cdekData?.office?.city || cdekData?.door?.city || orderData.city || '';
+                  const isMoscow = isMoscowCity(deliveryCityName);
+                  
+                  return (
+                    <div className="bg-bg-2 border-2 border-black/10 rounded-lg p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Выбранный тариф</p>
+                          <p className="font-semibold uppercase mb-1">{cdekData.tariff.tariff_name}</p>
+                          <p className="text-sm opacity-70">
+                            {cdekData.tariff.period_min === cdekData.tariff.period_max 
+                              ? `${cdekData.tariff.period_min} дней` 
+                              : `${cdekData.tariff.period_min}-${cdekData.tariff.period_max} дней`}
+                          </p>
+                        </div>
+                        <div className="sm:text-right">
+                          <p className="text-xs uppercase tracking-wider opacity-70 mb-2">Стоимость</p>
+                          {isMoscow ? (
+                            <p className="font-bold text-2xl text-bg-4">Бесплатно</p>
+                          ) : (
+                            <p className="font-bold text-2xl">{cdekData.tariff.delivery_sum.toLocaleString('ru-RU')} ₽</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             )}
           </div>
