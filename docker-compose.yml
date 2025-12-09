@@ -1,0 +1,24 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reusvertus_app
+    restart: unless-stopped
+    ports:
+      - "3300:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+    volumes:
+      - ./public:/app/public:ro
+    command: >
+      sh -c "
+        if [ -z \"$$DATABASE_URL\" ]; then
+          echo 'ERROR: DATABASE_URL is not set!' >&2
+          exit 1
+        fi
+        node server.js
+      "

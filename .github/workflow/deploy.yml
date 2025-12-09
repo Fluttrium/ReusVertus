@@ -1,0 +1,106 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+    
+      
+      - name: Setup SSH
+        env:
+          VPS_HOST: 92.118.114.147
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
+      
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: 92.118.114.147
+          VPS_USER: 'root'
+          VPS_PORT: '22'
+          DEPLOY_PATH: '/var/www/reusvertus' 
+          GIT_REPO: 'https://github.com/Fluttrium/ReusVertus.git' 
+        run: |
+          ssh -i ~/.ssh/deploy_key -p $VPS_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST bash -s << 'ENDSSH'
+            set -e
+            
+            DEPLOY_PATH="/var/www/reusvertus"
+            GIT_REPO="https://github.com/Fluttrium/ReusVertus.git"
+            
+            echo "Проверка дискового пространства..."
+            df -h / | tail -1
+            
+            echo "Очистка неиспользуемых Docker ресурсов..."
+            docker system prune -af --volumes || true
+            
+            echo "Очистка старых Docker образов..."
+            docker image prune -af || true
+            
+            echo "Проверка дискового пространства после очистки..."
+            df -h / | tail -1
+            
+            # Останавливаем контейнеры перед обновлением
+            cd "$DEPLOY_PATH" 2>/dev/null || true
+            if [ -f docker-compose.yml ]; then
+              docker compose down || docker-compose down || true
+            fi
+            
+            # Удаляем старую директорию полностью
+            echo "Удаление старой директории..."
+            cd /var/www
+            rm -rf reusvertus
+            
+            # Клонируем репозиторий заново
+            echo "Клонирование репозитория..."
+            git clone "$GIT_REPO" -b main reusvertus
+            
+            cd "$DEPLOY_PATH"
+            
+            # Настраиваем git
+            git config user.email "deploy@github-actions" || true
+            git config user.name "GitHub Actions" || true
+            
+            # Проверяем наличие Docker Compose
+            if command -v docker-compose &> /dev/null; then
+              DOCKER_COMPOSE_CMD="docker-compose"
+            elif docker compose version &> /dev/null; then
+              DOCKER_COMPOSE_CMD="docker compose"
+            else
+              echo "Ошибка: Docker Compose не установлен"
+              echo "Устанавливаем Docker Compose..."
+              sudo apt-get update -qq
+              sudo apt-get install -y docker-compose-plugin || sudo apt-get install -y docker-compose
+              if command -v docker-compose &> /dev/null; then
+                DOCKER_COMPOSE_CMD="docker-compose"
+              else
+                DOCKER_COMPOSE_CMD="docker compose"
+              fi
+            fi
+            
+            echo "Используем команду: $DOCKER_COMPOSE_CMD"
+            
+            # Запускаем docker compose
+            $DOCKER_COMPOSE_CMD down || true
+            $DOCKER_COMPOSE_CMD pull || true
+            $DOCKER_COMPOSE_CMD up -d --build
+            
+            # Проверяем статус
+            $DOCKER_COMPOSE_CMD ps
+          ENDSSH
+      
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
