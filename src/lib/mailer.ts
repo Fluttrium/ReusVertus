@@ -102,14 +102,15 @@ export async function sendSubscriptionNotification(email: string) {
   }
 
   // Поддержка нескольких получателей через запятую
-  const recipients = SUBSCRIPTION_NOTIFICATION_EMAIL.includes(',')
-    ? SUBSCRIPTION_NOTIFICATION_EMAIL.split(',').map(e => e.trim())
-    : SUBSCRIPTION_NOTIFICATION_EMAIL;
+  const recipientEmail = SUBSCRIPTION_NOTIFICATION_EMAIL || DEFAULT_RECIPIENT;
+  const recipients = recipientEmail.includes(',')
+    ? recipientEmail.split(',').map(e => e.trim())
+    : recipientEmail;
 
   try {
     await transporter.sendMail({
       to: recipients,
-      from: process.env.SMTP_FROM ?? (process.env.SMTP_USER ?? SUBSCRIPTION_NOTIFICATION_EMAIL),
+      from: process.env.SMTP_FROM ?? (process.env.SMTP_USER ?? recipientEmail),
       subject: "Новая подписка на рассылку",
       text: `Пользователь оставил email для рассылки: ${email}`,
       html: `<p>Пользователь оставил email для рассылки:</p><p><strong>${email}</strong></p>`,
