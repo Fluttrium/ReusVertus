@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Парсинг JSON полей
-    const parsedCartItems = cartItems.map((item) => {
+    const parsedCartItems = cartItems.map((item: typeof cartItems[0]) => {
       let colors = null;
       let sizes = null;
 

@@ -72,6 +72,19 @@ export default function Footer() {
                 федерального проекта «Технологии».
               </p>
               </div>
+
+            {/* Юридические документы и Fluttrium */}
+            <div className="pt-4 border-t border-white/20 flex flex-col gap-2 text-xs">
+              <Link href="/offer" className="hover:opacity-70 transition-opacity">
+                Договор публичной оферты
+              </Link>
+              <Link href="/terms" className="hover:opacity-70 transition-opacity">
+                Пользовательское соглашение
+              </Link>
+              <p className="opacity-70">
+                Дизайн и разработка <Link href="https://fluttrium.com" target="_blank" className="hover:opacity-100 transition-opacity underline">Fluttrium</Link>
+              </p>
+            </div>
             </div>
           </div>
         </footer>
@@ -133,6 +146,18 @@ export default function Footer() {
           </p>
         </div>
 
+        {/* Юридические документы и Fluttrium */}
+        <div className="mt-4 pt-4 border-t border-white/20 flex gap-6 text-xs flex-wrap">
+          <Link href="/offer" className="hover:opacity-70 transition-opacity">
+            Договор публичной оферты
+          </Link>
+          <Link href="/terms" className="hover:opacity-70 transition-opacity">
+            Пользовательское соглашение
+          </Link>
+          <span className="opacity-70">
+            Дизайн и разработка <Link href="https://fluttrium.com" target="_blank" className="hover:opacity-100 transition-opacity underline">Fluttrium</Link>
+          </span>
+        </div>
         
         </div>
       </footer>

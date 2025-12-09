@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Вычислить общую сумму
     const total = cartItems.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
+      (sum: number, item: typeof cartItems[0]) => sum + item.product.price * item.quantity,
       0
     );
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         email: email || null,
         status: 'pending',
         orderItems: {
-          create: cartItems.map((item) => ({
+          create: cartItems.map((item: typeof cartItems[0]) => ({
             productId: item.productId,
             quantity: item.quantity,
             price: item.product.price,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       email: order.email,
       phone: order.phone,
       address: order.address,
-      items: order.orderItems.map((item) => ({
+      items: order.orderItems.map((item: typeof order.orderItems[0]) => ({
         name: sanitizeProductName(item.product?.name ?? ""),
         code: item.product?.code ?? null,
         quantity: item.quantity,
