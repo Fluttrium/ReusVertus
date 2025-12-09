@@ -363,7 +363,7 @@ export default function HeaderNavigation({ className = "" }: HeaderNavigationPro
             </button>
           </div>
           <nav
-            className={`fixed top-20 left-0 right-0 bottom-0 z-40 w-full bg-bg-4/95 backdrop-blur-sm flex flex-col gap-6 text-base tracking-[0.1em] px-6 pt-6 pb-8 pr-16 transition-all duration-300 overflow-y-auto ${
+            className={`fixed inset-0 z-40 w-full h-screen bg-bg-4/95 backdrop-blur-sm flex flex-col gap-6 text-base tracking-[0.1em] px-6 pt-20 pb-8 pr-16 transition-all duration-300 overflow-y-auto ${
               isMobileMenuOpen
                 ? "translate-x-0 opacity-100 pointer-events-auto"
                 : "-translate-x-full opacity-0 pointer-events-none"
