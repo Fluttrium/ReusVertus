@@ -38,7 +38,7 @@ jobs:
             DEPLOY_PATH="/var/www/reusvertus"
             GIT_REPO="https://github.com/Fluttrium/ReusVertus.git"
             
-            echo "Проверка дискового пространства..."
+            echo "Проверка дискового пространства.."
             df -h / | tail -1
             
             echo "Очистка неиспользуемых Docker ресурсов..."
